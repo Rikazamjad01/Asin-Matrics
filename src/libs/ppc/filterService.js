@@ -45,8 +45,10 @@ export const DATE_RANGE_PRESETS = [
  */
 export const getWeeksForPreset = presetValue => {
   const preset = DATE_RANGE_PRESETS.find(p => p.value === presetValue)
+
   if (!preset) return enrichedWeeks
   if (preset.weeks === null) return enrichedWeeks
+
   return enrichedWeeks.slice(-preset.weeks)
 }
 
@@ -56,6 +58,7 @@ export const getWeeksForPreset = presetValue => {
  */
 export const splitIntoPeriods = weeks => {
   const half = Math.floor(weeks.length / 2)
+
   return {
     current: weeks.slice(-half),
     previous: weeks.slice(-half * 2, -half)
