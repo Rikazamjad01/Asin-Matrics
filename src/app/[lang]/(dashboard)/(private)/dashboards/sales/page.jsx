@@ -15,6 +15,7 @@ import TotalRevenueReport from '@views/dashboards/analytics/TotalRevenueReport'
 import OrderStatistics from '@views/dashboards/analytics/OrderStatistics'
 import NewVisitorsAndActivityCharts from '@views/apps/ecommerce/dashboard/NewVisitorsAndActivityCharts'
 import BarOrders from '@views/apps/ecommerce/dashboard/BarOrders'
+import GlobalTimeFilter from '@/components/GlobalTimeFilter'
 import OverviewSalesActivity from '@/views/dashboards/crm/OverviewSalesActivity'
 import EarningReports from '@/views/dashboards/crm/EarningReports'
 import TopProducts from '@/views/dashboards/crm/TopProducts'
@@ -51,30 +52,22 @@ const mockData = {
 
 const DashboardSales = () => {
   // States
-  const [dateAnchor, setDateAnchor] = useState(null)
   const [productAnchor, setProductAnchor] = useState(null)
-  const [dateFilter, setDateFilter] = useState('Last 7 Days')
+  const [dateFilter, setDateFilter] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
   const [productFilter, setProductFilter] = useState('All Products')
 
-  // Get current data based on filters
+  // Get current data based on filters - mapping standard date range back to old mock keys
   const currentData = useMemo(() => {
-    return mockData[productFilter]?.[dateFilter] || mockData['All Products']['Last 7 Days']
-  }, [productFilter, dateFilter])
+    let mockKey = 'Last 7 Days'
 
-  const handleDateClick = event => {
-    setDateAnchor(event.currentTarget)
-  }
+    if (dateFilter === '30d' || dateFilter === 'custom') mockKey = 'Last 30 Days'
+
+    return mockData[productFilter]?.[mockKey] || mockData['All Products']['Last 7 Days']
+  }, [productFilter, dateFilter])
 
   const handleProductClick = event => {
     setProductAnchor(event.currentTarget)
-  }
-
-  const handleDateClose = filter => {
-    if (filter) {
-      setDateFilter(filter)
-    }
-
-    setDateAnchor(null)
   }
 
   const handleProductClose = filter => {
@@ -112,26 +105,12 @@ const DashboardSales = () => {
           <MenuItem onClick={() => handleProductClose('Sports')}>Sports</MenuItem>
         </Menu>
 
-        <Button
-          variant='outlined'
-          onClick={handleDateClick}
-          endIcon={<i className='bx-chevron-down text-xl' />}
-          className='min-w-[160px]'
-        >
-          {dateFilter}
-        </Button>
-        <Menu
-          keepMounted
-          anchorEl={dateAnchor}
-          onClose={() => handleDateClose(null)}
-          open={Boolean(dateAnchor)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        >
-          <MenuItem onClick={() => handleDateClose('Last 7 Days')}>Last 7 Days</MenuItem>
-          <MenuItem onClick={() => handleDateClose('Last 30 Days')}>Last 30 Days</MenuItem>
-          <MenuItem onClick={() => handleDateClose('Last 90 Days')}>Last 90 Days</MenuItem>
-        </Menu>
+        <GlobalTimeFilter
+          dateRange={dateFilter}
+          onDateRangeChange={setDateFilter}
+          customDateRange={customDateRange}
+          onCustomDateRangeChange={setCustomDateRange}
+        />
       </Grid>
 
       {/* KPI Cards Row - Now updates with filters */}

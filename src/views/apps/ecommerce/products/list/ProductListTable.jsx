@@ -103,11 +103,53 @@ const productStatusObj = {
 const columnHelper = createColumnHelper()
 
 const ProductListTable = ({ productData }) => {
+  // Initialize data with mocked fields
+  const initialData = useMemo(() => {
+    return (productData || []).map((product, index) => {
+      // Deterministic but pseudo-random generation based on ID
+      const seed = product.id * 12345
+      const mockAsin = `B0${Math.floor(Math.abs(Math.sin(seed) * 100000000))
+        .toString()
+        .padStart(8, '0')}`
+
+      const priceVal = parseFloat((product.price || '$0').replace(/[^0-9.-]+/g, '')) || 0
+      const units = product.qty || 0
+
+      const revenue = priceVal * units
+      const marginPercent = 15 + Math.abs(Math.sin(seed + 1) * 35) // 15% to 50%
+      const cogs = revenue * (1 - marginPercent / 100) * 0.4 // Mock COGS ratio
+      const fees = revenue * 0.15 // Standard 15% referral fee roughly
+      const ppc = revenue * (0.05 + Math.abs(Math.sin(seed + 2) * 0.15)) // 5% to 20%
+
+      const profit = revenue - cogs - fees - ppc
+      const margin = revenue > 0 ? (profit / revenue) * 100 : 0
+      const acos = ppc > 0 ? (ppc / revenue) * 100 : 0
+
+      return {
+        ...product,
+        asin: mockAsin,
+        revenue,
+        cogs,
+        fees,
+        ppc,
+        acos,
+        profit,
+        margin
+      }
+    })
+  }, [productData])
+
   // States
   const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[productData])
+  const [data, setData] = useState(initialData)
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
+
+  // Sync state if productData prop changes
+  useEffect(() => {
+    setData(initialData)
+    setFilteredData(initialData)
+  }, [initialData])
 
   // Hooks
   const { lang: locale } = useParams()
@@ -148,33 +190,68 @@ const ProductListTable = ({ productData }) => {
           </div>
         )
       }),
-      columnHelper.accessor('category', {
-        header: 'Category',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-4'>
-            <CustomAvatar skin='light' color={productCategoryObj[row.original.category].color} size={30}>
-              <i className={classnames(productCategoryObj[row.original.category].icon, 'text-lg')} />
-            </CustomAvatar>
-            <Typography color='text.primary'>{row.original.category}</Typography>
-          </div>
-        )
-      }),
-      columnHelper.accessor('stock', {
-        header: 'Stock',
-        cell: ({ row }) => <Switch defaultChecked={row.original.stock} />,
-        enableSorting: false
-      }),
-      columnHelper.accessor('sku', {
-        header: 'SKU',
-        cell: ({ row }) => <Typography>{row.original.sku}</Typography>
-      }),
-      columnHelper.accessor('price', {
-        header: 'Price',
-        cell: ({ row }) => <Typography>{row.original.price}</Typography>
+      columnHelper.accessor('asin', {
+        header: 'ASIN',
+        cell: ({ row }) => <Typography>{row.original.asin}</Typography>
       }),
       columnHelper.accessor('qty', {
-        header: 'QTY',
+        header: 'Units',
         cell: ({ row }) => <Typography>{row.original.qty}</Typography>
+      }),
+      columnHelper.accessor('revenue', {
+        header: 'Revenue',
+        cell: ({ row }) => (
+          <Typography>
+            ${row.original.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('cogs', {
+        header: 'COGS',
+        cell: ({ row }) => (
+          <Chip
+            label={`$${row.original.cogs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            variant='tonal'
+            color='secondary'
+            size='small'
+          />
+        )
+      }),
+      columnHelper.accessor('fees', {
+        header: 'Fees',
+        cell: ({ row }) => (
+          <Typography>
+            ${row.original.fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('ppc', {
+        header: 'PPC',
+        cell: ({ row }) => (
+          <Typography>
+            ${row.original.ppc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('acos', {
+        header: 'ACOS',
+        cell: ({ row }) => <Typography>{row.original.acos.toFixed(2)}%</Typography>
+      }),
+      columnHelper.accessor('profit', {
+        header: 'Profit',
+        cell: ({ row }) => (
+          <Typography color={row.original.profit >= 0 ? 'success.main' : 'error.main'} className='font-medium'>
+            ${row.original.profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('margin', {
+        header: 'Margin',
+        cell: ({ row }) => (
+          <Typography color={row.original.margin >= 0 ? 'success.main' : 'error.main'} className='font-medium'>
+            {row.original.margin.toFixed(2)}%
+          </Typography>
+        )
       }),
       columnHelper.accessor('status', {
         header: 'Status',
@@ -186,30 +263,6 @@ const ProductListTable = ({ productData }) => {
             size='small'
           />
         )
-      }),
-      columnHelper.accessor('actions', {
-        header: 'Actions',
-        cell: ({ row }) => (
-          <div className='flex items-center'>
-            <IconButton>
-              <i className='bx-edit text-textSecondary' />
-            </IconButton>
-            <OptionMenu
-              iconButtonProps={{ size: 'medium' }}
-              iconClassName='text-textSecondary'
-              options={[
-                { text: 'Download', icon: 'bx-download' },
-                {
-                  text: 'Delete',
-                  icon: 'bx-trash-alt',
-                  menuItemProps: { onClick: () => setData(data?.filter(product => product.id !== row.original.id)) }
-                },
-                { text: 'Duplicate', icon: 'bx-copy' }
-              ]}
-            />
-          </div>
-        ),
-        enableSorting: false
       })
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps

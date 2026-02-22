@@ -13,7 +13,7 @@ import TabPanel from '@mui/lab/TabPanel'
 import { styled } from '@mui/material/styles'
 
 // Component Imports
-import ProductsFilter from './ProductsFilter'
+import GlobalTimeFilter from '@/components/GlobalTimeFilter'
 import ProductsKpiSection from './ProductsKpiSection'
 import ProductListTable from './ProductListTable'
 import AnalyticsTable from './AnalyticsTable'
@@ -34,6 +34,7 @@ const CustomTabList = styled(TabList)(({ theme }) => ({
 const ProductsDashboard = ({ initialData }) => {
   // State for filter and tabs
   const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
   const [activeTab, setActiveTab] = useState('products')
 
   const handleTabChange = (event, newValue) => {
@@ -48,7 +49,12 @@ const ProductsDashboard = ({ initialData }) => {
           <Typography variant='h5' fontWeight={700}>
             Products Dashboard
           </Typography>
-          <ProductsFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+          <GlobalTimeFilter
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
+          />
         </div>
       </Grid>
 

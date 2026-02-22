@@ -62,37 +62,46 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         renderExpandedMenuItemIcon={{ icon: <i className='bx-bxs-circle' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <SubMenu label={dictionary['navigation'].dashboards} icon={<i className='bx-home-smile' />}>
-          <MenuItem href={`/${locale}/dashboards/overview`}>{dictionary['navigation'].dashboard}</MenuItem>
-          <MenuItem href={`/${locale}/dashboards/sales`}>{dictionary['navigation'].sales}</MenuItem>
-          <MenuItem href={`/${locale}/dashboards/inventory`}>{dictionary['navigation'].inventory}</MenuItem>
-          <MenuItem href={`/${locale}/dashboards/advertising`}>{dictionary['navigation'].advertising}</MenuItem>
-          <MenuItem href={`/${locale}/dashboards/reports`}>{dictionary['navigation'].reports}</MenuItem>
-          <MenuItem href={`/${locale}/dashboards/rankings`}>{dictionary['navigation'].rankings}</MenuItem>
-          <MenuItem href={`/${locale}/dashboards/reviews`}>{dictionary['navigation'].reviews}</MenuItem>
-          {/* <MenuItem href={`/${locale}/dashboards/logistics`}>{dictionary['navigation'].logistics}</MenuItem> */}
-        </SubMenu>
-        <SubMenu icon={<i className='bx-box' />} label={dictionary['navigation'].orders}>
-          <MenuItem href={`/${locale}/apps/ecommerce/orders/list`}>{dictionary['navigation'].list}</MenuItem>
-          {/* <MenuItem
-            href={`/${locale}/apps/ecommerce/orders/details/5434`}
-            exactMatch={false}
-            activeUrl='/apps/ecommerce/orders/details'
-          >
-            {dictionary['navigation'].details}
-          </MenuItem> */}
-        </SubMenu>
-        <SubMenu label={dictionary['navigation'].user} icon={<i className='bx-user' />}>
-          <MenuItem href={`/${locale}/apps/user/list`}>{dictionary['navigation'].list}</MenuItem>
-          {/* <MenuItem href={`/${locale}/apps/user/view`}>{dictionary['navigation'].view}</MenuItem> */}
-        </SubMenu>
+        <MenuItem href={`/${locale}/dashboards/overview`} icon={<i className='bx-home' />}>
+          {dictionary['navigation'].dashboard}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/advertising`} icon={<i className='bx-line-chart' />}>
+          {dictionary['navigation'].advertising}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/reports`} icon={<i className='bx-bar-chart' />}>
+          {dictionary['navigation'].reports}
+        </MenuItem>
+        <MenuItem href={`/${locale}/apps/ecommerce/products/list`} icon={<i className='bx-box' />}>
+          {dictionary['navigation'].products}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/rankings`} icon={<i className='bx-trophy' />}>
+          {dictionary['navigation'].rankings}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/inventory`} icon={<i className='bx-package' />}>
+          {dictionary['navigation'].inventory}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/reviews`} icon={<i className='bx-star' />}>
+          {dictionary['navigation'].reviews}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/sales`} icon={<i className='bx-dollar' />}>
+          {dictionary['navigation'].sales}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/sns-pro`} icon={<i className='bx-bar-chart' />}>
+          {dictionary['navigation']['sns-pro']}
+        </MenuItem>
+        <MenuItem href={`/${locale}/apps/ecommerce/orders/list`} icon={<i className='bx-box' />}>
+          {dictionary['navigation'].orders}
+        </MenuItem>
+        <MenuItem href={`/${locale}/apps/user/list`} icon={<i className='bx-user' />}>
+          {dictionary['navigation'].user}
+        </MenuItem>
         <SubMenu label={dictionary['navigation'].rolesPermissions} icon={<i className='bx-check-shield' />}>
           <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
           <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
         </SubMenu>
-        <SubMenu label={dictionary['navigation'].settings} icon={<i className='bx-cog' />}>
-          <MenuItem href={`/${locale}/apps/ecommerce/settings`}>{dictionary['navigation'].settings}</MenuItem>
-        </SubMenu>
+        <MenuItem href={`/${locale}/apps/ecommerce/settings`} icon={<i className='bx-cog' />}>
+          {dictionary['navigation'].settings}
+        </MenuItem>
         {/* <MenuSection label={dictionary['navigation'].appsPages}>
           <SubMenu label={dictionary['navigation'].eCommerce} icon={<i className='bx-cart-alt' />}>
             <SubMenu label={dictionary['navigation'].products}>

@@ -10,10 +10,16 @@ import ActivityTimeline from '@views/dashboards/analytics/ActivityTimeline'
 import TableWithTabs from '@views/dashboards/analytics/TableWithTabs'
 import BarRevenueChart from '@views/dashboards/analytics/BarRevenueChart'
 import RadialExpensesChart from '@views/apps/ecommerce/dashboard/RadialExpensesChart'
+import GlobalTimeFilter from '@/components/GlobalTimeFilter'
 
 const DashboardInventory = () => {
   return (
     <Grid container spacing={6}>
+      {/* Filter Row */}
+      <Grid size={{ xs: 12 }} className='flex justify-end'>
+        <GlobalTimeFilter />
+      </Grid>
+
       {/* Stock Level KPIs */}
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <Vertical

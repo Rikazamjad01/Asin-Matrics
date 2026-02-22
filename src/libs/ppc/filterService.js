@@ -35,6 +35,8 @@ export const getAllWeeks = () => enrichedWeeks
  * Returns { label, weeks } pairs.
  */
 export const DATE_RANGE_PRESETS = [
+  { label: 'Last 7 Days', value: '7d', weeks: 1 },
+  { label: 'Last 30 Days', value: '30d', weeks: 4 },
   { label: 'Last 4 Weeks', value: 'last4', weeks: 4 },
   { label: 'Last 8 Weeks', value: 'last8', weeks: 8 },
   { label: 'All Time', value: 'all', weeks: null }

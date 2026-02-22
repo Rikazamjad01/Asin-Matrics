@@ -23,23 +23,90 @@ import PPCTable3CampaignBreakdown from '@/views/dashboards/ppc/PPCTable3Campaign
 import PPCTable4SPSegmentation from '@/views/dashboards/ppc/PPCTable4SPSegmentation'
 
 // Filter Service
-import { getWeeksForPreset, DATE_RANGE_PRESETS } from '@/libs/ppc/filterService'
+import { getWeeksForPreset } from '@/libs/ppc/filterService'
+
+// Section Filter
+import SectionFilter from '@/views/dashboards/overview/SectionFilter'
+
+// Libs
+import { enrichAllWeeks } from '@/libs/ppc/calculationEngine'
+
+// Multiplier for mock data scaling (matches overview page)
+const productMultiplier = {
+  all: 1,
+  'asin-1': 0.45,
+  'asin-2': 0.32,
+  'asin-3': 0.23
+}
 
 const DashboardAdvertising = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState('1')
 
-  // Date preset filter
-  const [anchorEl, setAnchorEl] = useState(null)
-  const [preset, setPreset] = useState('last8')
+  // Filter state
+  const [selectedProduct, setSelectedProduct] = useState('all')
+  const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
 
-  const weeks = useMemo(() => getWeeksForPreset(preset), [preset])
-  const presetLabel = DATE_RANGE_PRESETS.find(p => p.value === preset)?.label || 'Last 8 Weeks'
+  // Filtered/Scaled data
+  const weeks = useMemo(() => {
+    const rawWeeks = getWeeksForPreset(dateRange)
+    const k = productMultiplier[selectedProduct] ?? 1
+
+    if (k === 1) return rawWeeks
+
+    // Scale raw values
+    const scaled = rawWeeks.map(w => ({
+      ...w,
+      sessions: Math.round(w.sessions * k),
+      totalOrders: Math.round(w.totalOrders * k),
+      totalSales: Math.round(w.totalSales * k),
+      ntbCustomers: Math.round(w.ntbCustomers * k),
+      ntbOrders: Math.round(w.ntbOrders * k),
+      ntbSales: Math.round(w.ntbSales * k),
+      repeatCustomers: Math.round(w.repeatCustomers * k),
+      repeatOrders: Math.round(w.repeatOrders * k),
+      repeatSales: Math.round(w.repeatSales * k),
+      organicOrders: Math.round(w.organicOrders * k),
+      adClicks: Math.round(w.adClicks * k),
+      adSpend: Math.round(w.adSpend * k),
+      adOrders: Math.round(w.adOrders * k),
+      adSales: Math.round(w.adSales * k),
+      sp: {
+        clicks: Math.round(w.sp.clicks * k),
+        spend: Math.round(w.sp.spend * k),
+        orders: Math.round(w.sp.orders * k),
+        revenue: Math.round(w.sp.revenue * k)
+      },
+      sb: {
+        clicks: Math.round(w.sb.clicks * k),
+        spend: Math.round(w.sb.spend * k),
+        orders: Math.round(w.sb.orders * k),
+        revenue: Math.round(w.sb.revenue * k)
+      },
+      sd: {
+        clicks: Math.round(w.sd.clicks * k),
+        spend: Math.round(w.sd.spend * k),
+        orders: Math.round(w.sd.orders * k),
+        revenue: Math.round(w.sd.revenue * k)
+      },
+      nonBranded: {
+        spend: Math.round(w.nonBranded.spend * k),
+        sales: Math.round(w.nonBranded.sales * k)
+      },
+      branded: {
+        spend: Math.round(w.branded.spend * k),
+        sales: Math.round(w.branded.sales * k)
+      }
+    }))
+
+    // Re-enrich to recalculate KPIs (ROAS, etc.)
+    return enrichAllWeeks(scaled)
+  }, [selectedProduct, dateRange])
 
   return (
     <Grid container spacing={6}>
-      {/* Page Header */}
-      <Grid size={{ xs: 12 }} className='flex items-center justify-between'>
+      <Grid size={{ xs: 12 }} className='flex items-center justify-between flex-wrap gap-4'>
         <div>
           <Typography variant='h5' fontWeight={700}>
             PPC Dashboard
@@ -48,35 +115,14 @@ const DashboardAdvertising = () => {
             Full Amazon PPC Template — Parts 1, 2, 3 & 5
           </Typography>
         </div>
-        <Button
-          variant='outlined'
-          onClick={e => setAnchorEl(e.currentTarget)}
-          endIcon={<i className='bx-chevron-down text-xl' />}
-          className='min-w-[160px]'
-        >
-          {presetLabel}
-        </Button>
-        <Menu
-          keepMounted
-          anchorEl={anchorEl}
-          onClose={() => setAnchorEl(null)}
-          open={Boolean(anchorEl)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        >
-          {DATE_RANGE_PRESETS.map(p => (
-            <MenuItem
-              key={p.value}
-              onClick={() => {
-                setPreset(p.value)
-                setAnchorEl(null)
-              }}
-              selected={preset === p.value}
-            >
-              {p.label}
-            </MenuItem>
-          ))}
-        </Menu>
+        <SectionFilter
+          product={selectedProduct}
+          onProductChange={setSelectedProduct}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          customDateRange={customDateRange}
+          onCustomDateRangeChange={setCustomDateRange}
+        />
       </Grid>
 
       {/* Tabbed Tables — One table per tab */}

@@ -4,12 +4,11 @@ import { useState } from 'react'
 
 // MUI Imports
 import Box from '@mui/material/Box'
-import ToggleButton from '@mui/material/ToggleButton'
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import MenuItem from '@mui/material/MenuItem'
 
 // Component Imports
 import CustomTextField from '@core/components/mui/TextField'
+import GlobalTimeFilter from '@/components/GlobalTimeFilter'
 
 // Mock Data
 import { PRODUCT_OPTIONS } from '@/libs/overview/overviewMockData'
@@ -19,9 +18,17 @@ import { PRODUCT_OPTIONS } from '@/libs/overview/overviewMockData'
  *
  * Props:
  *  - product, onProductChange   — controlled product select
- *  - dateRange, onDateRangeChange — controlled '7d' | '30d'
+ *  - dateRange, onDateRangeChange — controlled '7d' | '30d' | 'custom'
+ *  - customDateRange, onCustomDateRangeChange - controlled array of antd dates
  */
-const SectionFilter = ({ product = 'all', onProductChange, dateRange = '7d', onDateRangeChange }) => {
+const SectionFilter = ({
+  product = 'all',
+  onProductChange,
+  dateRange = '7d',
+  onDateRangeChange,
+  customDateRange,
+  onCustomDateRangeChange
+}) => {
   return (
     <Box className='flex flex-wrap items-center gap-3'>
       <CustomTextField
@@ -37,17 +44,12 @@ const SectionFilter = ({ product = 'all', onProductChange, dateRange = '7d', onD
           </MenuItem>
         ))}
       </CustomTextField>
-
-      <ToggleButtonGroup
-        exclusive
-        size='small'
-        value={dateRange}
-        onChange={(_, val) => val && onDateRangeChange?.(val)}
-        color='primary'
-      >
-        <ToggleButton value='7d'>Last 7 Days</ToggleButton>
-        <ToggleButton value='30d'>Last 30 Days</ToggleButton>
-      </ToggleButtonGroup>
+      <GlobalTimeFilter
+        dateRange={dateRange}
+        onDateRangeChange={onDateRangeChange}
+        customDateRange={customDateRange}
+        onCustomDateRangeChange={onCustomDateRangeChange}
+      />
     </Box>
   )
 }
