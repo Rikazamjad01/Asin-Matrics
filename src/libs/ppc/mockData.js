@@ -10,6 +10,7 @@ export const ppcWeeklyData = [
     weekRange: 'Nov 1–7',
     startDate: '2024-11-01',
     endDate: '2024-11-07',
+
     // Part 1 — Sales, Customer & Organic
     sessions: 4820,
     totalOrders: 312,
@@ -21,6 +22,7 @@ export const ppcWeeklyData = [
     repeatOrders: 210,
     repeatSales: 12420.0,
     organicOrders: 198,
+
     // Part 2 — High-Level Advertising
     adClicks: 1240,
     adSpend: 2180.5,
@@ -29,10 +31,12 @@ export const ppcWeeklyData = [
     campaignStatusSP: 'Active',
     campaignStatusSB: 'Active',
     campaignStatusSD: 'Paused',
+
     // Part 3 — Campaign Breakdown
     sp: { clicks: 820, spend: 1450.0, orders: 78, revenue: 4620.0 },
     sb: { clicks: 310, spend: 580.5, orders: 28, revenue: 1780.0 },
     sd: { clicks: 110, spend: 150.0, orders: 8, revenue: 380.0 },
+
     // Part 5 — SP Segmentation
     nonBranded: { spend: 980.0, sales: 2980.0 },
     branded: { spend: 470.0, sales: 1640.0 }
@@ -470,6 +474,7 @@ export const rankingsData = [
     sponsoredRank: 1,
     date: '2025-01-31'
   },
+
   // Historical data for trend chart
   {
     id: 'r1h1',
@@ -521,8 +526,11 @@ export const rankingsData = [
 export const reviewsData = {
   summary: {
     totalReviews: 2847,
+    previousTotalReviews: 2750,
     avgRating: 4.3,
+    previousAvgRating: 4.2,
     newReviewsThisWeek: 38,
+    weeklyAverageNew: 28,
     previousWeekReviews: 31,
     starBreakdown: { 5: 1482, 4: 712, 3: 341, 2: 198, 1: 114 }
   },

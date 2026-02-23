@@ -39,7 +39,7 @@ const productMultiplier = {
   'asin-3': 0.23
 }
 
-const DashboardAdvertising = () => {
+const PPCDashboard = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState('1')
 
@@ -112,7 +112,7 @@ const DashboardAdvertising = () => {
             PPC Dashboard
           </Typography>
           <Typography variant='body2' color='text.secondary'>
-            Full Amazon PPC Template — Parts 1, 2, 3 & 5
+            Full Amazon PPC Template
           </Typography>
         </div>
         <SectionFilter
@@ -129,10 +129,10 @@ const DashboardAdvertising = () => {
       <Grid size={{ xs: 12 }}>
         <TabContext value={activeTab}>
           <TabList onChange={(_, newValue) => setActiveTab(newValue)} variant='scrollable' scrollButtons='auto'>
-            <Tab label='Part 1 — Organic & General' value='1' />
-            <Tab label='Part 2 — PPC Performance' value='2' />
-            <Tab label='Part 3 — Campaign Breakdown' value='3' />
-            <Tab label='Part 5 — Branded vs Non-Branded' value='4' />
+            <Tab label='Organic & General' value='1' />
+            <Tab label='PPC Performance' value='2' />
+            <Tab label='Campaign Breakdown' value='3' />
+            <Tab label='Branded vs Non-Branded' value='4' />
           </TabList>
 
           <TabPanel value='1' sx={{ p: 0, pt: 3 }}>
@@ -156,4 +156,4 @@ const DashboardAdvertising = () => {
   )
 }
 
-export default DashboardAdvertising
+export default PPCDashboard

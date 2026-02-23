@@ -82,6 +82,14 @@ const verticalMenuData = dictionary => [
             href: '/dashboards/overview'
           },
           {
+            label: dictionary['navigation'].sns - pro,
+            href: '/dashboards/sns-pro'
+          },
+          {
+            label: dictionary['navigation'].rankPro,
+            href: '/dashboards/rank-pro'
+          },
+          {
             label: dictionary['navigation'].products,
             children: [
               {

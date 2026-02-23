@@ -26,64 +26,68 @@ import tableStyles from '@core/styles/table.module.css'
 
 const columnHelper = createColumnHelper()
 
-const SnsAsinTable = ({ productData }) => {
-  // Generate mock S&S data securely
+const ReviewsAsinTable = ({ productData }) => {
+  // Generate mock Reviews data securely
   const tableData = useMemo(() => {
     return (productData || []).map(p => {
-      const seed = p.id * 8888
-
-      const asin = `B0${Math.floor(Math.abs(Math.sin(seed) * 100000000))
-        .toString()
-        .padStart(8, '0')}`
+      const seed = p.id * 7777
 
       const priceVal = parseFloat((p.price || '$0').replace(/[^0-9.-]+/g, '')) || 0
 
-      const snsCustomers = 50 + Math.floor(Math.abs(Math.sin(seed + 1) * 450))
-      const snsRevenue = snsCustomers * priceVal * 0.9 // 10% S&S discount
-      const pctOfTotal = 15 + Math.abs(Math.sin(seed + 2) * 25) // 15% - 40%
-      const growth = (Math.sin(seed + 3) * 15).toFixed(1) // -15% to +15%
-      const aov = snsRevenue / snsCustomers
+      // Reviews specific mock data
+      const totalReviews = 100 + Math.floor(Math.abs(Math.sin(seed) * 2000))
+      const avgRating = (3.5 + Math.abs(Math.sin(seed + 1) * 1.5)).toFixed(1)
+      const positivePct = 60 + Math.abs(Math.sin(seed + 2) * 35) // 60% - 95%
+      const responseRate = 70 + Math.abs(Math.sin(seed + 3) * 25) // 70% - 95%
+      const growth = (Math.sin(seed + 4) * 12).toFixed(1) // -12% to +12%
 
       return {
         id: p.id,
-        asin,
-        snsCustomers,
-        snsRevenue,
-        pctOfTotal,
-        growth: parseFloat(growth),
-        aov
+        image: p.image,
+        productName: p.productName,
+        totalReviews,
+        avgRating: parseFloat(avgRating),
+        positivePct,
+        responseRate,
+        growth: parseFloat(growth)
       }
     })
   }, [productData])
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor('asin', {
-        header: 'ASIN (ID)',
+      columnHelper.accessor('productName', {
+        header: 'Product',
         cell: ({ row }) => (
-          <Typography color='primary' className='font-medium'>
-            {row.original.asin}
-          </Typography>
+          <div className='flex items-center gap-3'>
+            <img src={row.original.image} alt={row.original.productName} width='34' height='34' className='rounded' />
+            <Typography color='text.primary' className='font-medium truncate max-w-[200px]'>
+              {row.original.productName}
+            </Typography>
+          </div>
         )
       }),
-      columnHelper.accessor('snsCustomers', {
-        header: 'S&S Customers',
-        cell: ({ row }) => <Typography>{row.original.snsCustomers}</Typography>
+      columnHelper.accessor('totalReviews', {
+        header: 'Total Reviews',
+        cell: ({ row }) => <Typography color='text.primary'>{row.original.totalReviews.toLocaleString()}</Typography>
       }),
-      columnHelper.accessor('snsRevenue', {
-        header: 'Monthly Revenue',
+      columnHelper.accessor('avgRating', {
+        header: 'Avg. Rating',
         cell: ({ row }) => (
-          <Typography>
-            ${row.original.snsRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Typography>
+          <div className='flex items-center gap-1.5'>
+            <Typography color='text.primary' className='font-medium'>
+              {row.original.avgRating}
+            </Typography>
+            <i className='bx-bxs-star text-warning text-base' />
+          </div>
         )
       }),
-      columnHelper.accessor('pctOfTotal', {
-        header: '% of Total',
-        cell: ({ row }) => <Typography>{row.original.pctOfTotal.toFixed(1)}%</Typography>
+      columnHelper.accessor('positivePct', {
+        header: 'Positive %',
+        cell: ({ row }) => <Typography>{row.original.positivePct.toFixed(1)}%</Typography>
       }),
       columnHelper.accessor('growth', {
-        header: 'Growth',
+        header: 'Trend',
         cell: ({ row }) => (
           <div className='flex items-center gap-1 mt-1'>
             <CustomAvatar skin='light' color={row.original.growth >= 0 ? 'success' : 'error'} size={24}>
@@ -98,13 +102,9 @@ const SnsAsinTable = ({ productData }) => {
           </div>
         )
       }),
-      columnHelper.accessor('aov', {
-        header: 'Avg Order Value',
-        cell: ({ row }) => (
-          <Typography>
-            ${row.original.aov.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Typography>
-        )
+      columnHelper.accessor('responseRate', {
+        header: 'Response Rate',
+        cell: ({ row }) => <Typography color='text.primary'>{row.original.responseRate.toFixed(0)}%</Typography>
       })
     ],
     []
@@ -159,4 +159,4 @@ const SnsAsinTable = ({ productData }) => {
   )
 }
 
-export default SnsAsinTable
+export default ReviewsAsinTable

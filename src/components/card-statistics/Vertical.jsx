@@ -9,15 +9,40 @@ import classnames from 'classnames'
 
 // Components Imports
 import OptionMenu from '@core/components/option-menu'
+import CustomAvatar from '@core/components/mui/Avatar'
 
 const Vertical = props => {
   // Props
-  const { title, imageSrc, stats, trendNumber, trend } = props
+  const {
+    title,
+    imageSrc,
+    stats,
+    trendNumber,
+    trend,
+    avatarIcon,
+    avatarColor,
+    avatarSkin,
+    avatarVariant,
+    avatarSize = 40
+  } = props
 
   return (
-    <Card>
+    <Card className='border'>
       <CardHeader
-        avatar={<img src={imageSrc} alt={title} width='40' height='40' />}
+        avatar={
+          avatarIcon ? (
+            <CustomAvatar
+              variant={avatarVariant || 'rounded'}
+              skin={avatarSkin || 'light'}
+              color={avatarColor || 'primary'}
+              size={avatarSize}
+            >
+              <i className={classnames(avatarIcon, 'text-xl')} />
+            </CustomAvatar>
+          ) : (
+            <img src={imageSrc} alt={title} width='40' height='40' />
+          )
+        }
         action={<OptionMenu options={['Yesterday', 'Last Week', 'Last Month']} />}
       />
 

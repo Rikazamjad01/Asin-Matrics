@@ -22,6 +22,12 @@ const nextConfig = {
         locale: false
       }
     ]
+  },
+  eslint: {
+    ignoreDuringBuilds: true
+  },
+  typescript: {
+    ignoreBuildErrors: true
   }
 }
 

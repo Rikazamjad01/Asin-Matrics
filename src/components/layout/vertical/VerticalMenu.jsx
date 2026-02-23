@@ -68,26 +68,29 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         <MenuItem href={`/${locale}/dashboards/advertising`} icon={<i className='bx-line-chart' />}>
           {dictionary['navigation'].advertising}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/reports`} icon={<i className='bx-bar-chart' />}>
-          {dictionary['navigation'].reports}
+        <MenuItem href={`/${locale}/dashboards/sns-pro`} icon={<i className='bx-bar-chart' />}>
+          {dictionary['navigation']['sns-pro']}
+        </MenuItem>
+        <MenuItem href={`/${locale}/dashboards/rank-pro`} icon={<i className='bx-trending-up' />}>
+          {dictionary['navigation'].rankPro}
         </MenuItem>
         <MenuItem href={`/${locale}/apps/ecommerce/products/list`} icon={<i className='bx-box' />}>
           {dictionary['navigation'].products}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/rankings`} icon={<i className='bx-trophy' />}>
+        {/* <MenuItem href={`/${locale}/dashboards/rankings`} icon={<i className='bx-trophy' />}>
           {dictionary['navigation'].rankings}
+        </MenuItem> */}
+        <MenuItem href={`/${locale}/dashboards/reviews`} icon={<i className='bx-star' />}>
+          {dictionary['navigation'].reviews}
+        </MenuItem>
+        {/* <MenuItem href={`/${locale}/dashboards/reports`} icon={<i className='bx-bar-chart' />}>
+          {dictionary['navigation'].reports}
         </MenuItem>
         <MenuItem href={`/${locale}/dashboards/inventory`} icon={<i className='bx-package' />}>
           {dictionary['navigation'].inventory}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/reviews`} icon={<i className='bx-star' />}>
-          {dictionary['navigation'].reviews}
-        </MenuItem>
         <MenuItem href={`/${locale}/dashboards/sales`} icon={<i className='bx-dollar' />}>
           {dictionary['navigation'].sales}
-        </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/sns-pro`} icon={<i className='bx-bar-chart' />}>
-          {dictionary['navigation']['sns-pro']}
         </MenuItem>
         <MenuItem href={`/${locale}/apps/ecommerce/orders/list`} icon={<i className='bx-box' />}>
           {dictionary['navigation'].orders}
@@ -101,7 +104,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         </SubMenu>
         <MenuItem href={`/${locale}/apps/ecommerce/settings`} icon={<i className='bx-cog' />}>
           {dictionary['navigation'].settings}
-        </MenuItem>
+        </MenuItem> */}
         {/* <MenuSection label={dictionary['navigation'].appsPages}>
           <SubMenu label={dictionary['navigation'].eCommerce} icon={<i className='bx-cart-alt' />}>
             <SubMenu label={dictionary['navigation'].products}>

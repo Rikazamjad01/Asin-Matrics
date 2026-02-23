@@ -1,50 +1,13 @@
-'use client'
+// Component Imports
+import ReviewsDashboard from '@/views/dashboards/reviews/ReviewsDashboard'
 
-// React Imports
-import { useState } from 'react'
+import { getEcommerceData } from '@/app/server/actions'
 
-// MUI Imports
-import Grid from '@mui/material/Grid2'
+const ReviewsPage = async () => {
+  // Fetching data for modular integration
+  const data = await getEcommerceData()
 
-// Components Imports
-import ReviewsKPICards from '@/views/dashboards/ppc/ReviewsKPICards'
-import RatingDistributionChart from '@/views/dashboards/ppc/RatingDistributionChart'
-import ReviewGrowthChart from '@/views/dashboards/ppc/ReviewGrowthChart'
-import GlobalTimeFilter from '@/components/GlobalTimeFilter'
-
-// Mock Data
-import { reviewsData } from '@/libs/ppc/mockData'
-
-const DashboardReviews = () => {
-  const [dateFilter, setDateFilter] = useState('30d')
-  const [customDateRange, setCustomDateRange] = useState(null)
-
-  return (
-    <Grid container spacing={6}>
-      {/* Filter Row */}
-      <Grid size={{ xs: 12 }} className='flex justify-end gap-4'>
-        <GlobalTimeFilter
-          dateRange={dateFilter}
-          onDateRangeChange={setDateFilter}
-          customDateRange={customDateRange}
-          onCustomDateRangeChange={setCustomDateRange}
-        />
-      </Grid>
-
-      {/* KPI Cards */}
-      <Grid size={{ xs: 12 }}>
-        <ReviewsKPICards summary={reviewsData.summary} />
-      </Grid>
-
-      {/* Rating Distribution + Review Growth */}
-      <Grid size={{ xs: 12, md: 5 }}>
-        <RatingDistributionChart starBreakdown={reviewsData.summary.starBreakdown} />
-      </Grid>
-      <Grid size={{ xs: 12, md: 7 }}>
-        <ReviewGrowthChart weeklyTrend={reviewsData.weeklyTrend} />
-      </Grid>
-    </Grid>
-  )
+  return <ReviewsDashboard productData={data?.products} />
 }
 
-export default DashboardReviews
+export default ReviewsPage
