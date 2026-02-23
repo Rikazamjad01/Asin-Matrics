@@ -25,6 +25,7 @@ const KPICard = ({
   invertImprovement = false
 }) => {
   const isPositive = improvement >= 0
+
   // For ACOS/TACOS: lower is better, so invert the color logic
   const isGood = invertImprovement ? !isPositive : isPositive
   const chipColor = improvement == null ? 'default' : isGood ? 'success' : 'error'
