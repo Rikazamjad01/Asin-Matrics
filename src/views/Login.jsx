@@ -86,7 +86,7 @@ const Login = () => {
 
   const onSubmit = async data => {
     // Authentication completely disabled - no verification, just redirect
-    const redirectURL = searchParams.get('redirectTo') ?? '/'
+    const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/overview'
 
     router.replace(getLocalizedUrl(redirectURL, locale))
   }
