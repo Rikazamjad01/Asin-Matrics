@@ -5,6 +5,9 @@ import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
+// Util Imports
+import { getAssetPath } from '@/utils/getAssetPath'
+
 const Congratulations = () => {
   return (
     <Card>
@@ -22,7 +25,7 @@ const Congratulations = () => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }} className='flex items-end justify-center sm:mbs-[-3px] sm:mbe-[-25px]'>
             <img
-              src='/images/illustrations/characters-with-objects/2.png'
+              src={getAssetPath('/images/illustrations/characters-with-objects/2.png')}
               alt='Congratulations John'
               className='bs-[185px]'
             />

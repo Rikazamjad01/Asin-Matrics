@@ -33,6 +33,7 @@ import themeConfig from '@configs/themeConfig'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import { getAssetPath } from '@/utils/getAssetPath'
 
 // Styled Custom Components
 const LoginIllustration = styled('img')(({ theme }) => ({
@@ -94,7 +95,7 @@ const Login = () => {
     <div className='flex bs-full justify-center'>
       <div className='flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden'>
         <LoginIllustration
-          src='/images/illustrations/characters-with-objects/7.png'
+          src={getAssetPath('/images/illustrations/characters-with-objects/7.png')}
           alt='character-illustration'
           className={classnames({ 'scale-x-[-1]': theme.direction === 'rtl' })}
         />

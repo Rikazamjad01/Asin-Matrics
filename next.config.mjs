@@ -28,6 +28,9 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true
+  },
+  env: {
+    NEXT_PUBLIC_BASEPATH: process.env.BASEPATH || ''
   }
 }
 

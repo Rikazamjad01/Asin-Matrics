@@ -11,6 +11,9 @@ import classnames from 'classnames'
 import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 
+// Util Imports
+import { getAssetPath } from '@/utils/getAssetPath'
+
 const Vertical = props => {
   // Props
   const {
@@ -40,7 +43,7 @@ const Vertical = props => {
               <i className={classnames(avatarIcon, 'text-xl')} />
             </CustomAvatar>
           ) : (
-            <img src={imageSrc} alt={title} width='40' height='40' />
+            <img src={getAssetPath(imageSrc)} alt={title} width='40' height='40' />
           )
         }
         action={<OptionMenu options={['Yesterday', 'Last Week', 'Last Month']} />}

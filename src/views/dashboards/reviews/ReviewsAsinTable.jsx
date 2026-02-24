@@ -24,6 +24,9 @@ import TablePaginationComponent from '@components/TablePaginationComponent'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
+// Util Imports
+import { getAssetPath } from '@/utils/getAssetPath'
+
 const columnHelper = createColumnHelper()
 
 const ReviewsAsinTable = ({ productData }) => {
@@ -60,7 +63,13 @@ const ReviewsAsinTable = ({ productData }) => {
         header: 'Product',
         cell: ({ row }) => (
           <div className='flex items-center gap-3'>
-            <img src={row.original.image} alt={row.original.productName} width='34' height='34' className='rounded' />
+            <img
+              src={getAssetPath(row.original.image)}
+              alt={row.original.productName}
+              width='34'
+              height='34'
+              className='rounded'
+            />
             <Typography color='text.primary' className='font-medium truncate max-w-[200px]'>
               {row.original.productName}
             </Typography>
