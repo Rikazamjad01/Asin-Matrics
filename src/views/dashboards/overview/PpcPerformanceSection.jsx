@@ -49,7 +49,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='Total Sales'
-              imageSrc='/images/cards/wallet-info-bg.png'
+              imageSrc='/images/cards/wallet-info-bg.png?v=1'
               stats={fmt.currency(agg.totalSales)}
               trendNumber={5.2}
               trend='positive'
@@ -58,7 +58,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='Total Orders'
-              imageSrc='/images/cards/mac-warning-bg.png'
+              imageSrc='/images/cards/mac-warning-bg.png?v=1'
               stats={fmt.number(agg.totalOrders)}
               trendNumber={3.8}
               trend='positive'
@@ -67,7 +67,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='Ad Spend'
-              imageSrc='/images/cards/credit-card-warning-bg.png'
+              imageSrc='/images/cards/credit-card-warning-bg.png?v=1'
               stats={fmt.currency(agg.adSpend)}
               trendNumber={1.2}
               trend='negative'
@@ -76,7 +76,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='ROAS'
-              imageSrc='/images/cards/chart-success-bg.png'
+              imageSrc='/images/cards/chart-success-bg.png?v=1'
               stats={fmt.roas(agg.roas)}
               trendNumber={4.1}
               trend='positive'
@@ -85,7 +85,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='ACOS'
-              imageSrc='/images/cards/wallet-primary-bg.png'
+              imageSrc='/images/cards/wallet-primary-bg.png?v=1'
               stats={fmt.percent(agg.acos)}
               trendNumber={2.3}
               trend='negative'
@@ -94,7 +94,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='TACOS'
-              imageSrc='/images/cards/briefcase-primary-bg.png'
+              imageSrc='/images/cards/briefcase-primary-bg.png?v=1'
               stats={fmt.percent(agg.tacos)}
               trendNumber={1.5}
               trend='negative'
@@ -103,7 +103,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='Organic Sales'
-              imageSrc='/images/cards/wallet-success-bg.png'
+              imageSrc='/images/cards/wallet-success-bg.png?v=1'
               stats={fmt.currency(agg.organicSales)}
               trendNumber={6.4}
               trend='positive'
@@ -112,7 +112,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='Organic Conv. Rate'
-              imageSrc='/images/cards/chart-info-bg.png'
+              imageSrc='/images/cards/chart-info-bg.png?v=1'
               stats={fmt.percent(agg.organicConvRate)}
               trendNumber={0.8}
               trend='positive'
@@ -121,7 +121,7 @@ const PpcPerformanceSection = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Vertical
               title='Sponsored Conv. Rate'
-              imageSrc='/images/cards/mobile-success-bg.png'
+              imageSrc='/images/cards/mobile-success-bg.png?v=1'
               stats={fmt.percent(agg.sponsoredConvRate)}
               trendNumber={1.1}
               trend='positive'
