@@ -5,18 +5,18 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: '/en/dashboards/overview',
+        destination: '/en/login',
         permanent: true,
         locale: false
       },
       {
         source: '/:lang(en|fr|ar)',
-        destination: '/:lang/dashboards/overview',
+        destination: '/:lang/login',
         permanent: true,
         locale: false
       },
       {
-        source: '/:path((?!en|fr|ar|front-pages|favicon.ico).*)',
+        source: '/:path((?!en|fr|ar|front-pages|favicon.ico|images|api|next.svg|vercel.svg).*)',
         destination: '/en/:path*',
         permanent: true,
         locale: false
