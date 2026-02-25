@@ -23,9 +23,10 @@ const PpcPerformanceSection = () => {
   // KPI Section filter state
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
 
   // Filtered KPI data
-  const agg = useMemo(() => getKpiData(product, dateRange), [product, dateRange])
+  const agg = useMemo(() => getKpiData(product, dateRange, customDateRange), [product, dateRange, customDateRange])
 
   if (!agg) return null
 
@@ -40,6 +41,8 @@ const PpcPerformanceSection = () => {
             onProductChange={setProduct}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
           />
         }
       />

@@ -34,8 +34,12 @@ const SubscribeSaveSection = () => {
   const theme = useTheme()
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
 
-  const data = useMemo(() => getSubscribeSaveData(product, dateRange), [product, dateRange])
+  const data = useMemo(
+    () => getSubscribeSaveData(product, dateRange, customDateRange),
+    [product, dateRange, customDateRange]
+  )
 
   // Subscriber Trend chart
   const trendOptions = {
@@ -121,6 +125,8 @@ const SubscribeSaveSection = () => {
             onProductChange={setProduct}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
           />
         }
       />

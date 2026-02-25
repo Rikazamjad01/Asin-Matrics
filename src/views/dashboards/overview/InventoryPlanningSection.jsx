@@ -26,8 +26,12 @@ const InventoryPlanningSection = () => {
   const router = useRouter()
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
 
-  const data = useMemo(() => getInventoryData(product, dateRange), [product, dateRange])
+  const data = useMemo(
+    () => getInventoryData(product, dateRange, customDateRange),
+    [product, dateRange, customDateRange]
+  )
 
   const tiles = [
     { icon: 'bx-package', color: 'primary', label: 'Current Stock', value: data.currentStock.toLocaleString() },
@@ -52,6 +56,8 @@ const InventoryPlanningSection = () => {
             onProductChange={setProduct}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
           />
         }
       />

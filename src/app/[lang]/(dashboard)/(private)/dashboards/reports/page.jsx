@@ -1,3 +1,7 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+
 // MUI Imports
 import Grid from '@mui/material/Grid2'
 
@@ -14,15 +18,27 @@ import GlobalTimeFilter from '@/components/GlobalTimeFilter'
 // Data Imports
 import { getAcademyData } from '@/app/server/actions'
 
-const DashboardReports = async () => {
-  // Vars
-  const data = await getAcademyData()
+const DashboardReports = () => {
+  const [data, setData] = useState(null)
+  const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
+
+  useEffect(() => {
+    getAcademyData().then(setData)
+  }, [])
+
+  if (!data) return null
 
   return (
     <Grid container spacing={6}>
       {/* Filter Row */}
       <Grid size={{ xs: 12 }} className='flex justify-end'>
-        <GlobalTimeFilter />
+        <GlobalTimeFilter
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          customDateRange={customDateRange}
+          onCustomDateRangeChange={setCustomDateRange}
+        />
       </Grid>
 
       {/* Welcome Banner */}

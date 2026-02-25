@@ -40,28 +40,36 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
 const GlobalTimeFilter = ({ dateRange = '7d', onDateRangeChange, customDateRange = null, onCustomDateRangeChange }) => {
   return (
     <Box className='flex flex-wrap items-center gap-3'>
-      {dateRange === 'custom' && (
-        <Box className='min-w-[260px]'>
-          <RangePicker
-            value={customDateRange}
-            onChange={dates => onCustomDateRangeChange?.(dates)}
-            size='large' // Antd sizing to roughly match MUI small/medium
-            style={{ width: '100%', borderRadius: 6 }}
-          />
-        </Box>
-      )}
-
       <StyledToggleButtonGroup
         exclusive
         size='small'
         value={dateRange}
-        onChange={(_, val) => val && onDateRangeChange?.(val)}
+        onChange={(_, val) => {
+          if (val) {
+            onDateRangeChange?.(val)
+            onCustomDateRangeChange?.(null)
+          }
+        }}
         color='primary'
       >
         <ToggleButton value='7d'>Last 7 Days</ToggleButton>
         <ToggleButton value='30d'>Last 30 Days</ToggleButton>
-        <ToggleButton value='custom'>Custom</ToggleButton>
       </StyledToggleButtonGroup>
+
+      <Box className='min-w-[260px]'>
+        <RangePicker
+          value={customDateRange}
+          onChange={dates => {
+            onCustomDateRangeChange?.(dates)
+
+            if (dates) {
+              onDateRangeChange?.('custom')
+            }
+          }}
+          size='large' // Antd sizing to roughly match MUI small/medium
+          style={{ width: '100%', borderRadius: 6 }}
+        />
+      </Box>
     </Box>
   )
 }

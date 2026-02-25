@@ -33,8 +33,9 @@ const GeoRankTrackerSection = () => {
   const theme = useTheme()
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
 
-  const data = useMemo(() => getGeoRankData(product, dateRange), [product, dateRange])
+  const data = useMemo(() => getGeoRankData(product, dateRange, customDateRange), [product, dateRange, customDateRange])
 
   // Heat map chart options — polished with reverse color scale (lower rank = better = greener)
   const heatMapOptions = {
@@ -159,6 +160,8 @@ const GeoRankTrackerSection = () => {
             onProductChange={setProduct}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
           />
         }
       />

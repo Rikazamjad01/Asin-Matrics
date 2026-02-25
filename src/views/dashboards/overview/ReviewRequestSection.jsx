@@ -41,8 +41,12 @@ const ReviewRequestSection = () => {
   const theme = useTheme()
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
 
-  const data = useMemo(() => getReviewRequestData(product, dateRange), [product, dateRange])
+  const data = useMemo(
+    () => getReviewRequestData(product, dateRange, customDateRange),
+    [product, dateRange, customDateRange]
+  )
 
   // Reviews Received Trend chart
   const trendOptions = {
@@ -142,6 +146,8 @@ const ReviewRequestSection = () => {
             onProductChange={setProduct}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
           />
         }
       />

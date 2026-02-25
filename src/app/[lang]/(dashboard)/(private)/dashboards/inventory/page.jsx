@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 // MUI Imports
 import Grid from '@mui/material/Grid2'
 
@@ -13,11 +17,19 @@ import RadialExpensesChart from '@views/apps/ecommerce/dashboard/RadialExpensesC
 import GlobalTimeFilter from '@/components/GlobalTimeFilter'
 
 const DashboardInventory = () => {
+  const [dateRange, setDateRange] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState(null)
+
   return (
     <Grid container spacing={6}>
       {/* Filter Row */}
       <Grid size={{ xs: 12 }} className='flex justify-end'>
-        <GlobalTimeFilter />
+        <GlobalTimeFilter
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          customDateRange={customDateRange}
+          onCustomDateRangeChange={setCustomDateRange}
+        />
       </Grid>
 
       {/* Stock Level KPIs */}
