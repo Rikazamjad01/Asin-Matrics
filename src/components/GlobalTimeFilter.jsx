@@ -52,8 +52,8 @@ const GlobalTimeFilter = ({ dateRange = '7d', onDateRangeChange, customDateRange
         }}
         color='primary'
       >
-        <ToggleButton value='7d'>Last 7 Days</ToggleButton>
-        <ToggleButton value='30d'>Last 30 Days</ToggleButton>
+        <ToggleButton value='7d' size='medium'>Last 7 Days</ToggleButton>
+        <ToggleButton value='30d' size='medium'>Last 30 Days</ToggleButton>
       </StyledToggleButtonGroup>
 
       <Box className='min-w-[260px]'>
