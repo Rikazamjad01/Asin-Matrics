@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 
 // Next Imports
 import dynamic from 'next/dynamic'
+import { useParams, useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -21,6 +22,9 @@ import { useTheme } from '@mui/material/styles'
 import CustomAvatar from '@core/components/mui/Avatar'
 import SectionFilter from './SectionFilter'
 
+// Util Imports
+import { getLocalizedUrl } from '@/utils/i18n'
+
 // Styled Component Imports
 const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexCharts'))
 
@@ -32,6 +36,8 @@ const fmtCurrency = val => `$${val.toLocaleString('en-US', { minimumFractionDigi
 
 const SubscribeSaveSection = () => {
   const theme = useTheme()
+  const router = useRouter()
+  const { lang: locale } = useParams()
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
   const [customDateRange, setCustomDateRange] = useState(null)
@@ -249,7 +255,11 @@ const SubscribeSaveSection = () => {
 
         {/* Bottom Button */}
         <div className='flex justify-end mbs-4'>
-          <Button variant='contained' endIcon={<i className='bx-right-arrow-alt' />}>
+          <Button
+            variant='contained'
+            endIcon={<i className='bx-right-arrow-alt' />}
+            onClick={() => router.push(getLocalizedUrl('/dashboards/sns-pro', locale))}
+          >
             View Subscriber Trends
           </Button>
         </div>

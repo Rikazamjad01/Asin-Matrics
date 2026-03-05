@@ -14,15 +14,15 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import Divider from '@mui/material/Divider'
+
 import { styled, useTheme } from '@mui/material/styles'
 
 // Third-party Imports
-import { signIn } from 'next-auth/react'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
 import { email, object, minLength, string, pipe, nonEmpty } from 'valibot'
 import classnames from 'classnames'
+import { toast } from 'react-toastify'
 
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
@@ -34,6 +34,10 @@ import themeConfig from '@configs/themeConfig'
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 import { getAssetPath } from '@/utils/getAssetPath'
+
+// Supabase Client
+import { supabase } from '@/utils/supabase/client'
+import { Alert } from '@mui/material'
 
 // Styled Custom Components
 const LoginIllustration = styled('img')(({ theme }) => ({
@@ -63,6 +67,7 @@ const Login = () => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Hooks
   const router = useRouter()
@@ -77,15 +82,28 @@ const Login = () => {
   } = useForm({
     resolver: valibotResolver(schema),
     defaultValues: {
-      email: 'admin@sneat.com',
-      password: 'admin'
+      email: '',
+      password: ''
     }
   })
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit = async data => {
-    // Authentication completely disabled - no verification, just redirect
+    setIsLoading(true)
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password
+    })
+
+    if (error) {
+      toast.error(error.message)
+      setIsLoading(false)
+
+      return
+    }
+
     const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/overview'
 
     router.replace(getLocalizedUrl(redirectURL, locale))
@@ -109,6 +127,11 @@ const Login = () => {
             <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
             <Typography>Please sign-in to your account and start the adventure</Typography>
           </div>
+          {errorState && (
+            <Alert severity='error' className='mbe-2'>
+              {errorState}
+            </Alert>
+          )}
           <form
             noValidate
             autoComplete='off'
@@ -185,15 +208,15 @@ const Login = () => {
                 Forgot password?
               </Typography>
             </div>
-            <Button fullWidth variant='contained' type='submit'>
-              Login
+            <Button fullWidth variant='contained' type='submit' disabled={isLoading}>
+              {isLoading ? 'Signing In...' : 'Login'}
             </Button>
-            {/* <div className='flex justify-center items-center flex-wrap gap-2'>
+            <div className='flex justify-center items-center flex-wrap gap-2'>
               <Typography>New on our platform?</Typography>
               <Typography component={Link} href={getLocalizedUrl('/register', locale)} color='primary.main'>
                 Create an account
               </Typography>
-            </div> */}
+            </div>
             {/* <Divider className='gap-2 text-textPrimary'>or</Divider>
             <Button
               color='secondary'
