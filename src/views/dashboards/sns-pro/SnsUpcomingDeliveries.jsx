@@ -7,7 +7,6 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import { styled } from '@mui/material/styles'
 
-// Custom Styled Component for Product Tile with Gradient
 const ProductTile = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -21,69 +20,73 @@ const ProductTile = styled(Box)(({ theme }) => ({
   }
 }))
 
-// Mock Data Generator
-const generateProducts = (prefix, count) => {
-  return Array.from({ length: count }).map((_, i) => ({
-    id: i,
-    name: `${prefix} Product ${i + 1}`,
-    units: Math.floor(Math.random() * 500) + 50,
-    revenue: Math.floor(Math.random() * 10000) + 1000
-  }))
-}
+const formatCurrency = value =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value)
 
-const upcomingData = [
-  {
-    title: 'Next 30 Days',
-    products: generateProducts('Fast', 5)
-  },
-  {
-    title: '30-60 Days',
-    products: generateProducts('Mid', 5)
-  },
-  {
-    title: '60-90 Days',
-    products: generateProducts('Long', 5)
-  }
-]
+const SnsUpcomingDeliveries = ({ metricsData }) => {
+  const latest = metricsData?.[0] || {}
 
-const formatCurrency = value => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0
-  }).format(value)
-}
+  const periods = [
+    {
+      title: 'Next 30 Days',
+      units: latest.forecasted_shipped_subscription_units_30 || 0,
+      revenue: latest.forecasted_shipped_subscription_revenue_30 || 0
+    },
+    {
+      title: '30–60 Days',
+      units: latest.forecasted_shipped_subscription_units_60 || 0,
+      revenue: latest.forecasted_shipped_subscription_revenue_60 || 0
+    },
+    {
+      title: '60–90 Days',
+      units: latest.forecasted_shipped_subscription_units_90 || 0,
+      revenue: latest.forecasted_shipped_subscription_revenue_90 || 0
+    }
+  ]
 
-const SnsUpcomingDeliveries = () => {
+  const hasData = metricsData && metricsData.length > 0
+
   return (
     <Grid container spacing={6}>
-      {upcomingData.map((section, index) => (
+      {periods.map((period, index) => (
         <Grid size={{ xs: 12, md: 4 }} key={index}>
           <Card className='h-full'>
             <CardHeader
-              title={section.title}
+              title={period.title}
               action={<i className='bx-calendar text-primary text-2xl' />}
               className='pb-4'
             />
             <CardContent>
-              {section.products.map(product => (
-                <ProductTile key={product.id}>
+              {hasData ? (
+                <ProductTile>
                   <Box className='flex justify-between items-start mb-2'>
-                    <Typography variant='subtitle1' fontWeight={600} noWrap className='mr-2'>
-                      {product.name}
+                    <Typography variant='subtitle1' fontWeight={600}>
+                      Subscription Orders
                     </Typography>
-                    <Chip size='small' label={`${product.units} Units`} color='primary' variant='tonal' />
+                    <Chip
+                      size='small'
+                      label={`${Number(period.units).toLocaleString()} Units`}
+                      color='primary'
+                      variant='tonal'
+                    />
                   </Box>
                   <Box className='flex justify-between items-center'>
                     <Typography variant='body2' color='text.secondary'>
                       Expected Revenue:
                     </Typography>
                     <Typography variant='subtitle2' color='success.main' fontWeight={700}>
-                      {formatCurrency(product.revenue)}
+                      {formatCurrency(period.revenue)}
                     </Typography>
                   </Box>
                 </ProductTile>
-              ))}
+              ) : (
+                <Box className='text-center py-6'>
+                  <i className='bx-calendar-x text-4xl text-textDisabled' />
+                  <Typography color='text.secondary' variant='body2' className='mt-2'>
+                    No forecast data yet. Sync S&S Metrics.
+                  </Typography>
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Grid>

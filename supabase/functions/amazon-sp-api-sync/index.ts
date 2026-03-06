@@ -408,6 +408,410 @@ async function syncSearchTerms(supabase: ReturnType<typeof createClient>) {
   return { synced: rows.length, message: `Successfully synced ${rows.length} search term records` }
 }
 
+// ─── Action: Sync Replenishment Metrics ───────────────────────────────────────
+async function syncReplenishmentMetrics(supabase: ReturnType<typeof createClient>) {
+  const accessToken = await getAccessToken()
+
+  // Use 2025-01-01 as start — Postman confirmed older dates return 403
+  const body = {
+    aggregationFrequency: "MONTH",
+    timeInterval: {
+      startDate: "2025-01-01T00:00:00Z",
+      endDate: new Date().toISOString()
+    },
+    marketplaceId: MARKETPLACE_US,      // Required
+    programTypes: ["SUBSCRIBE_AND_SAVE"],  // Required
+    metrics: [
+      "SHIPPED_SUBSCRIPTION_UNITS",
+      "TOTAL_SUBSCRIPTIONS_REVENUE",
+      "ACTIVE_SUBSCRIPTIONS",
+      "LOST_REVENUE_DUE_TO_OOS",
+      "NOT_DELIVERED_DUE_TO_OOS",
+      "SUBSCRIBER_NON_SUBSCRIBER_AVERAGE_REVENUE",
+      "SUBSCRIBER_RETENTION"
+    ],
+    timePeriodType: "PERFORMANCE"
+  }
+
+  // Confirmed endpoint from Postman: /sellingPartners/metrics/search
+  const res = await fetch(`${SP_API_BASE}/replenishment/2022-11-07/sellingPartners/metrics/search`, {
+    method: "POST",
+    headers: {
+      "x-amz-access-token": accessToken,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body)
+  })
+
+  if (!res.ok) {
+    const errText = await res.text()
+
+    throw new Error(`Replenishment API error ${res.status}: ${errText}`)
+  }
+
+  const data = await res.json()
+  const metrics = data?.metrics ?? []
+
+  if (metrics.length === 0) {
+    return { synced: 0, message: "No replenishment metrics returned" }
+  }
+
+  const rows = metrics.map((item: Record<string, unknown>) => {
+    // Use the actual interval start date as the unique key — no redundancy
+    const interval = item.timeInterval as Record<string, string> | undefined
+
+    const weekStartDate = interval?.startDate
+      ? interval.startDate.split("T")[0]
+      : new Date().toISOString().split("T")[0]
+
+    return {
+      report_date: weekStartDate,
+      marketplace_id: MARKETPLACE_US,
+
+      // Performance metrics confirmed from API
+      shipped_subscription_units: (item.shippedSubscriptionUnits as number) ?? 0,
+      total_subscriptions_revenue: (item.totalSubscriptionsRevenue as number) ?? 0,
+      active_subscriptions: (item.activeSubscriptions as number) ?? 0,
+      lost_revenue_due_to_oos: (item.lostRevenueDueToOOS as number) ?? 0,
+      not_delivered_due_to_oos: (item.notDeliveredDueToOOS as number) ?? 0,
+      subscriber_avg_revenue: (item.subscriberNonSubscriberAverageRevenue as number) ?? 0,
+      subscriber_retention: (item.subscriberRetention as number) ?? 0,
+      currency_code: (item.currencyCode as string) ?? "USD",
+
+      synced_at: new Date().toISOString()
+    }
+  })
+
+  const { error } = await supabase
+    .from("replenishment_metrics")
+    .upsert(rows, { onConflict: "report_date,marketplace_id" })
+
+  if (error) throw new Error(`DB upsert failed: ${error.message}`)
+
+  return { synced: rows.length, message: `Successfully synced ${rows.length} replenishment metrics records` }
+}
+
+// ─── Action: Send Solicitations ────────────────────────────────────────────────
+async function sendSolicitations(supabase: ReturnType<typeof createClient>) {
+  const accessToken = await getAccessToken()
+
+  // 1. Fetch Orders from the last 30 days
+  const url = new URL(`${SP_API_BASE}/orders/v0/orders`)
+
+  url.searchParams.set("MarketplaceIds", MARKETPLACE_US)
+  url.searchParams.set("OrderStatuses", "Shipped")
+
+  // 30 days ago
+  const thirtyDaysAgo = new Date()
+
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  url.searchParams.set("CreatedAfter", thirtyDaysAgo.toISOString())
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      "x-amz-access-token": accessToken,
+      "Content-Type": "application/json",
+    },
+  })
+
+  if (!res.ok) {
+    const errText = await res.text()
+
+    throw new Error(`Orders API error ${res.status}: ${errText}`)
+  }
+
+  const data = await res.json()
+  const orders = data?.payload?.Orders ?? []
+
+  if (orders.length === 0) {
+    return { synced: 0, message: "No recent shipped orders found." }
+  }
+
+  // 2. Fetch already processed orders from our DB
+  const { data: existingSolicitations } = await supabase
+    .from("solicitations")
+    .select("amazon_order_id")
+    .eq("marketplace_id", MARKETPLACE_US)
+
+  const processedSet = new Set((existingSolicitations || []).map(r => r.amazon_order_id))
+
+  let sentCount = 0
+  let skippedCount = 0
+  let errorCount = 0
+
+  const fiveDaysAgo = new Date()
+
+  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5)
+
+  // 3. Process eligible orders
+  for (const order of orders) {
+    const orderId = order.AmazonOrderId
+    const purchaseDateStr = order.PurchaseDate
+
+    if (!orderId || !purchaseDateStr) continue
+
+    // Skip if we've already processed this order
+    if (processedSet.has(orderId)) {
+      skippedCount++
+      continue
+    }
+
+    // Eligibility check: Request must be sent 5 to 30 days after the order purchase date
+    const purchaseDate = new Date(purchaseDateStr)
+
+    if (purchaseDate > fiveDaysAgo || purchaseDate < thirtyDaysAgo) {
+      // Too new (< 5 days) or too old (> 30 days, though API restricts this already)
+      skippedCount++
+      continue
+    }
+
+    // 4. Send Solicitation request
+    const solUrl = new URL(`${SP_API_BASE}/solicitations/v1/orders/${orderId}/solicitations/productReviewAndSellerFeedback`)
+
+    solUrl.searchParams.set("marketplaceIds", MARKETPLACE_US)
+
+    const solRes = await fetch(solUrl.toString(), {
+      method: "POST",
+      headers: {
+        "x-amz-access-token": accessToken,
+        "Content-Type": "application/json",
+      },
+    })
+
+    const status = solRes.status
+    let dbStatus = "error"
+    let errMessage = null
+
+    if (status === 201) {
+      dbStatus = "sent"
+      sentCount++
+    } else if (status === 409) { // 409 Conflict: Already solicited
+      dbStatus = "already_solicited"
+      skippedCount++
+    } else if (status === 403) { // 403 Forbidden: Ineligible (e.g. buyer opted out)
+      dbStatus = "ineligible"
+      skippedCount++
+    } else {
+      dbStatus = "error"
+      errMessage = await solRes.text()
+      errorCount++
+    }
+
+    // 5. Log it to the DB so we don't try again
+    await supabase.from("solicitations").insert({
+      amazon_order_id: orderId,
+      marketplace_id: MARKETPLACE_US,
+      status: dbStatus,
+      http_status: status,
+      error_message: errMessage,
+      order_date: purchaseDateStr
+    })
+
+    // Solicitations API is 1 request per second
+    // We sleep 1s to avoid 429 Too Many Requests
+    await sleep(1000)
+  }
+
+  return {
+    synced: sentCount,
+    message: `Solicitations finished processing. Sent: ${sentCount}. Skipped: ${skippedCount}. Errors: ${errorCount}.`
+  }
+}
+
+// ─── Sync Finances ────────────────────────────────────────────────────────────
+async function syncFinances(supabase: any) {
+  const accessToken = await getAccessToken()
+
+  // 30 days ago
+  const date = new Date()
+
+  date.setDate(date.getDate() - 30)
+  const postedAfter = date.toISOString()
+
+  let nextToken = ""
+  let totalProcessed = 0
+  let totalUpserted = 0
+
+  do {
+    let url = `${SP_API_BASE}/finances/2024-06-19/transactions?postedAfter=${postedAfter}&marketplaceId=${MARKETPLACE_US}`
+
+    if (nextToken) url += `&nextToken=${encodeURIComponent(nextToken)}`
+
+    const res = await fetch(url, {
+      headers: {
+        "x-amz-access-token": accessToken,
+        "Accept": "application/json"
+      }
+    })
+
+    if (!res.ok) {
+      const errText = await res.text()
+
+      throw new Error(`Finances API failed: ${errText}`)
+    }
+
+    const data = await res.json()
+    const transactions = data.transactions || []
+
+    nextToken = data.nextToken || ""
+
+    if (transactions.length === 0) break
+    totalProcessed += transactions.length
+
+    const records = transactions.map((t: any) => {
+      let revenue = 0
+      let fees = 0
+
+      // Financial components breakdown
+      if (t.breakdowns && Array.isArray(t.breakdowns)) {
+        t.breakdowns.forEach((b: any) => {
+          const type = (b.breakdownType || "").toLowerCase()
+
+          // Support differing API schema versions just in case
+          const amount = b.breakdownAmount?.currencyAmount || b.breakdownAmount?.amount || 0
+
+          if (type.includes("principal") || type.includes("tax")) {
+             revenue += amount
+          } else if (type.includes("fee") || type.includes("commission")) {
+             fees += amount
+          }
+        })
+      }
+
+      // Extract context like OrderID and SKU
+      let amazonOrderId = null
+      let sellerSku = null
+
+      if (t.relatedIdentifiers && Array.isArray(t.relatedIdentifiers)) {
+        const orderIdObj = t.relatedIdentifiers.find((id: any) => id.relatedIdentifierName === "ORDER_ID" || id.relatedIdentifierName === "AmazonOrderId")
+
+        if (orderIdObj) amazonOrderId = orderIdObj.relatedIdentifierValue
+
+        const skuObj = t.relatedIdentifiers.find((id: any) => id.relatedIdentifierName === "SELLER_SKU" || id.relatedIdentifierName === "SellerSKU")
+
+        if (skuObj) sellerSku = skuObj.relatedIdentifierValue
+      }
+
+      if (!sellerSku && t.contexts && Array.isArray(t.contexts)) {
+        const skuCtx = t.contexts.find((c: any) => c.sku)
+
+        if (skuCtx) sellerSku = skuCtx.sku
+      }
+
+      return {
+        transaction_id: t.transactionId,
+        amazon_order_id: amazonOrderId,
+        posted_date: t.postedDate,
+        transaction_type: t.transactionType,
+        seller_sku: sellerSku,
+        revenue: revenue,
+        fees: fees
+      }
+    })
+
+    // Upsert into our new financial_events table
+    const { error } = await supabase.from("financial_events").upsert(records, { onConflict: "transaction_id" })
+
+    if (error) {
+      console.error("Upsert finances DB error:", error)
+    } else {
+      totalUpserted += records.length
+    }
+
+    // Rate Limit for finances API is usually tight (e.g. 0.5/sec)
+    if (nextToken) {
+      await sleep(2000)
+    }
+
+  } while (nextToken)
+
+  return {
+    synced: totalUpserted,
+    processed: totalProcessed,
+    message: `Finances sync completed. Upserted ${totalUpserted} events.`
+  }
+}
+
+// ─── Sync Subscribe and Save ──────────────────────────────────────────────────
+async function syncSns(supabase: ReturnType<typeof createClient>) {
+  const accessToken = await getAccessToken()
+
+  // 1. Fetch Performance Data
+  const perfTs = await requestAndDownloadReport(
+      accessToken,
+      'GET_FBA_SNS_PERFORMANCE_DATA',
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      new Date().toISOString()
+  );
+
+  const perfLines = perfTs.split('\n');
+  const perfHeaders = perfLines[0].split('\t');
+  const skuIdxPerf = perfHeaders.findIndex(h => h.toLowerCase() === 'sku');
+  const subsIdx = perfHeaders.findIndex(h => h.toLowerCase() === 'active subscriptions');
+  const shippedUnitsIdx = perfHeaders.findIndex(h => h.toLowerCase() === 'shipped units trailing 4 weeks');
+
+  const perfUpserts = [];
+
+  if (skuIdxPerf !== -1 && subsIdx !== -1 && shippedUnitsIdx !== -1) { // Ensure all required headers are found
+      for (let i = 1; i < perfLines.length; i++) {
+          if (!perfLines[i].trim()) continue;
+          const values = perfLines[i].split('\t');
+
+          perfUpserts.push({
+              seller_sku: values[skuIdxPerf],
+              active_subscriptions: parseInt(values[subsIdx]) || 0,
+              shipped_units: parseInt(values[shippedUnitsIdx]) || 0,
+              synced_at: new Date().toISOString()
+          });
+      }
+  }
+
+  if (perfUpserts.length > 0) {
+      const { error: pErr } = await supabase.from('sns_performance').upsert(perfUpserts, { onConflict: 'seller_sku' });
+
+      if (pErr) console.error("Error upserting sns_performance", pErr);
+  }
+
+  // 2. Fetch Forecast Data
+  const forecastTs = await requestAndDownloadReport(accessToken, 'GET_FBA_SNS_FORECAST_DATA');
+  const fcLines = forecastTs.split('\n');
+  const fcHeaders = fcLines[0].split('\t');
+
+  const skuIdxFc = fcHeaders.findIndex(h => h.toLowerCase() === 'sku');
+  const rev30Idx = fcHeaders.findIndex(h => h.toLowerCase() === 'expected revenue 30d');
+  const rev60Idx = fcHeaders.findIndex(h => h.toLowerCase() === 'expected revenue 60d');
+  const rev90Idx = fcHeaders.findIndex(h => h.toLowerCase() === 'expected revenue 90d');
+
+  const forecastUpserts = [];
+
+  if (skuIdxFc !== -1 && rev30Idx !== -1 && rev60Idx !== -1 && rev90Idx !== -1) { // Ensure all required headers are found
+      for (let i = 1; i < fcLines.length; i++) {
+          if (!fcLines[i].trim()) continue;
+          const values = fcLines[i].split('\t');
+
+          forecastUpserts.push({
+              seller_sku: values[skuIdxFc],
+              planned_revenue_30d: parseFloat(values[rev30Idx]) || 0,
+              planned_revenue_60d: parseFloat(values[rev60Idx]) || 0,
+              planned_revenue_90d: parseFloat(values[rev90Idx]) || 0,
+              synced_at: new Date().toISOString()
+          });
+      }
+  }
+
+  if (forecastUpserts.length > 0) {
+      const { error: fErr } = await supabase.from('sns_forecast').upsert(forecastUpserts, { onConflict: 'seller_sku' });
+
+      if (fErr) console.error("Error upserting sns_forecast", fErr);
+  }
+
+  return {
+      message: 'Subscribe and Save synced',
+      performanceCount: perfUpserts.length,
+      forecastCount: forecastUpserts.length
+  };
+}
+
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   try {
@@ -438,10 +842,26 @@ Deno.serve(async (req) => {
         result = await syncSearchTerms(supabase)
         break
 
+      case "replenishment_metrics":
+        result = await syncReplenishmentMetrics(supabase)
+        break
+
+      case "send_solicitations":
+        result = await sendSolicitations(supabase)
+        break
+
+      case "finances":
+        result = await syncFinances(supabase)
+        break
+
+      case "sns":
+        result = await syncSns(supabase)
+        break
+
       default:
         return new Response(
           JSON.stringify({
-            error: `Unknown action: ${action}. Supported: inventory, sales_traffic, inventory_detail, inventory_planning, search_terms`,
+            error: `Unknown action: ${action}. Supported: inventory, sales_traffic, inventory_detail, inventory_planning, search_terms, replenishment_metrics, send_solicitations, finances, sns`,
           }),
           { status: 400, headers: { "Content-Type": "application/json" } }
         )

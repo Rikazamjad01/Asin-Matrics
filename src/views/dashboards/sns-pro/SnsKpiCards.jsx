@@ -7,55 +7,65 @@ import Typography from '@mui/material/Typography'
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
-const kpiData = [
-  {
-    title: 'Total S&S Customers',
-    value: '14,285',
-    trend: '+12.4%',
-    trendColor: 'success.main',
-    comparison: 'vs last period',
-    icon: 'bx-group',
-    color: 'primary'
-  },
-  {
-    title: 'S&S Revenue (Monthly)',
-    value: '$124,500',
-    trend: '+8.2%',
-    trendColor: 'success.main',
-    comparison: 'vs last month',
-    icon: 'bx-dollar-circle',
-    color: 'success'
-  },
-  {
-    title: '% of Total Revenue',
-    value: '38.5%',
-    trend: '+2.1%',
-    trendColor: 'success.main',
-    comparison: 'vs last month',
-    icon: 'bx-pie-chart-alt-2',
-    color: 'warning'
-  },
-  {
-    title: 'Avg. Lifetime Value',
-    value: '$850.00',
-    trend: '-1.5%',
-    trendColor: 'error.main',
-    comparison: 'vs last quarter',
-    icon: 'bx-line-chart',
-    color: 'info'
-  },
-  {
-    title: 'Weekly Growth',
-    value: '350',
-    trend: '+45',
-    trendColor: 'success.main',
-    comparison: 'New customers vs last week',
-    icon: 'bx-trending-up',
-    color: 'secondary'
-  }
-]
+const SnsKpiCards = ({ metricsData }) => {
+  const latest = metricsData?.[0] || {}
 
-const SnsKpiCards = ({ dateRange }) => {
+  // Map API fields to KPIs — unmapped ones stay 0
+  const activeSubs = latest.active_subscriptions || 0
+  const monthlyRevenue = latest.total_subscriptions_revenue || 0
+  const avgLifetimeValue = latest.subscriber_avg_revenue || 0
+
+  const kpiData = [
+    {
+      title: 'Total S&S Customers',
+      value: activeSubs.toLocaleString(),
+      trend: '—',
+      trendColor: 'text.secondary',
+      comparison: 'active subscriptions',
+      icon: 'bx-group',
+      color: 'primary'
+    },
+    {
+      title: 'S&S Revenue (Monthly)',
+      value: `$${Number(monthlyRevenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      trend: '—',
+      trendColor: 'text.secondary',
+      comparison: 'total subscriptions revenue',
+      icon: 'bx-dollar-circle',
+      color: 'success'
+    },
+    {
+      title: '% of Total Revenue',
+      value: '—',
+      trend: '—',
+      trendColor: 'text.secondary',
+      comparison: 'not available from API',
+      icon: 'bx-pie-chart-alt-2',
+      color: 'warning'
+    },
+    {
+      title: 'Avg. Lifetime Value',
+      value:
+        avgLifetimeValue > 0
+          ? `$${Number(avgLifetimeValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : '—',
+      trend: '—',
+      trendColor: 'text.secondary',
+      comparison: 'subscriber avg revenue',
+      icon: 'bx-line-chart',
+      color: 'info'
+    },
+    {
+      title: 'Weekly Growth',
+      value: '—',
+      trend: '—',
+      trendColor: 'text.secondary',
+      comparison: 'not available from API',
+      icon: 'bx-trending-up',
+      color: 'secondary'
+    }
+  ]
+
   return (
     <Grid container spacing={6}>
       {kpiData.map((item, index) => (

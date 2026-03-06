@@ -12,41 +12,35 @@ import Divider from '@mui/material/Divider'
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
-const ReviewsProductCards = ({ productData }) => {
-  // Generate 6 mock cards taking the top elements from productData
-  const mockCards = useMemo(() => {
-    return (productData || []).slice(0, 6).map((p, index) => {
-      const seed = p.id * 6666
-
-      const totalReviews = 50 + Math.floor(Math.abs(Math.sin(seed) * 1500))
-      const avgRating = (3.8 + Math.abs(Math.sin(seed + 1) * 1.2)).toFixed(1)
-      const positiveSentiment = (75 + Math.abs(Math.sin(seed + 2) * 20)).toFixed(1)
-      const negativeSentiment = (100 - parseFloat(positiveSentiment) - Math.abs(Math.sin(seed + 3) * 5)).toFixed(1)
-      const growth = (Math.sin(seed + 4) * 18).toFixed(1)
-
+const ReviewsProductCards = ({ inventoryData }) => {
+  // Generate 6 mock cards taking the top elements from inventoryData (sorted by total_quantity)
+  const topProducts = useMemo(() => {
+    return (inventoryData || []).slice(0, 6).map((p, index) => {
       return {
         ...p,
         rank: index + 1,
-        totalReviews,
-        avgRating,
-        positiveSentiment,
-        negativeSentiment,
-        growth: parseFloat(growth)
+
+        // Mock data removed since no real API exists yet for these metrics
+        totalReviews: '—',
+        avgRating: '—',
+        positiveSentiment: '—',
+        negativeSentiment: '—',
+        growth: 0
       }
     })
-  }, [productData])
+  }, [inventoryData])
 
   return (
     <Grid container spacing={6}>
-      {mockCards.map(product => (
-        <Grid size={{ xs: 12, md: 4 }} key={product.id}>
+      {topProducts.map(product => (
+        <Grid size={{ xs: 12, md: 4 }} key={product.asin}>
           <Card>
             <CardContent>
               {/* Header: Name + Medals */}
               <Box className='flex items-start justify-between mb-1'>
                 <Box>
-                  <Typography variant='h5' className='truncate max-w-[200px]'>
-                    {product.productName}
+                  <Typography variant='h5' className='truncate max-w-[200px]' title={product.product_name}>
+                    {product.product_name || product.asin}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Reviews Performance
@@ -71,7 +65,7 @@ const ReviewsProductCards = ({ productData }) => {
                     <Typography variant='body2' fontWeight={600}>
                       {product.avgRating}
                     </Typography>
-                    <i className='bx-bxs-star text-warning text-sm' />
+                    <i className='bx-bx-star text-secondary text-sm' />
                   </Box>
                 </Box>
 
@@ -81,7 +75,7 @@ const ReviewsProductCards = ({ productData }) => {
                     Total Reviews
                   </Typography>
                   <Typography variant='body2' color='text.primary' fontWeight={600}>
-                    {product.totalReviews.toLocaleString()}
+                    {product.totalReviews}
                   </Typography>
                 </Box>
 
@@ -90,8 +84,8 @@ const ReviewsProductCards = ({ productData }) => {
                   <Typography variant='body1' fontWeight={500}>
                     Positive Sentiment
                   </Typography>
-                  <Typography variant='body2' color='success.main'>
-                    {product.positiveSentiment}%
+                  <Typography variant='body2' color='text.secondary'>
+                    {product.positiveSentiment}
                   </Typography>
                 </Box>
 
@@ -100,8 +94,8 @@ const ReviewsProductCards = ({ productData }) => {
                   <Typography variant='body1' fontWeight={500}>
                     Negative Sentiment
                   </Typography>
-                  <Typography variant='body2' color='error.main'>
-                    {product.negativeSentiment}%
+                  <Typography variant='body2' color='text.secondary'>
+                    {product.negativeSentiment}
                   </Typography>
                 </Box>
 
@@ -113,18 +107,10 @@ const ReviewsProductCards = ({ productData }) => {
                     Trend
                   </Typography>
                   <Box className='flex items-center gap-1'>
-                    <Typography
-                      variant='body2'
-                      fontWeight={600}
-                      color={product.growth >= 0 ? 'success.main' : 'error.main'}
-                    >
-                      {product.growth > 0 ? '+' : ''}
-                      {product.growth}%
+                    <Typography variant='body2' fontWeight={600} color='text.secondary'>
+                      —
                     </Typography>
-                    <i
-                      className={product.growth >= 0 ? 'bx-trending-up text-success' : 'bx-trending-down text-error'}
-                      style={{ fontSize: '1.2rem' }}
-                    />
+                    <i className='bx-minus text-secondary' style={{ fontSize: '1.2rem' }} />
                   </Box>
                 </Box>
               </Box>

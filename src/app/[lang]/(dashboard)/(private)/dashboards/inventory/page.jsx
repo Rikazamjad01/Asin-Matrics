@@ -23,15 +23,16 @@ import { supabase } from '@/utils/supabase/client'
 const DashboardInventory = () => {
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
+  const [syncingDetail, setSyncingDetail] = useState(false)
+  const [syncingPlanning, setSyncingPlanning] = useState(false)
 
   const fetchInventory = async () => {
     setLoading(true)
 
     const { data, error } = await supabase
-      .from('fba_inventory')
+      .from('fba_inventory_detail')
       .select('*')
-      .order('total_quantity', { ascending: false })
+      .order('afn_total_quantity', { ascending: false })
 
     if (!error && data) {
       setInventory(data)
@@ -40,25 +41,27 @@ const DashboardInventory = () => {
     setLoading(false)
   }
 
-  const handleSync = async () => {
-    setSyncing(true)
-
-    await supabase.functions.invoke('amazon-sp-api-sync', {
-      body: { action: 'inventory' }
-    })
-
+  const handleSyncDetail = async () => {
+    setSyncingDetail(true)
+    await supabase.functions.invoke('amazon-sp-api-sync', { body: { action: 'inventory_detail' } })
     await fetchInventory()
-    setSyncing(false)
+    setSyncingDetail(false)
+  }
+
+  const handleSyncPlanning = async () => {
+    setSyncingPlanning(true)
+    await supabase.functions.invoke('amazon-sp-api-sync', { body: { action: 'inventory_planning' } })
+    setSyncingPlanning(false)
   }
 
   useEffect(() => {
     fetchInventory()
   }, [])
 
-  // Compute KPI values
-  const totalStock = inventory.reduce((sum, item) => sum + (item.total_quantity || 0), 0)
-  const lowStockItems = inventory.filter(item => item.total_quantity > 0 && item.total_quantity <= 10).length
-  const outOfStockItems = inventory.filter(item => item.total_quantity === 0).length
+  // Compute KPI values based on the new fba_inventory_detail schema
+  const totalStock = inventory.reduce((sum, item) => sum + (item.afn_total_quantity || 0), 0)
+  const lowStockItems = inventory.filter(item => item.afn_total_quantity > 0 && item.afn_total_quantity <= 10).length
+  const outOfStockItems = inventory.filter(item => item.afn_total_quantity === 0).length
   const totalAsins = inventory.length
 
   if (loading) {
@@ -74,9 +77,24 @@ const DashboardInventory = () => {
       {/* Sync Button Row */}
       <Grid size={{ xs: 12 }} className='flex justify-between items-center'>
         <Typography variant='h5'>Inventory Dashboard</Typography>
-        <Button variant='contained' onClick={handleSync} disabled={syncing} startIcon={<i className='bx-refresh' />}>
-          {syncing ? 'Syncing...' : 'Sync from Amazon'}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant='outlined'
+            onClick={handleSyncPlanning}
+            disabled={syncingPlanning}
+            startIcon={syncingPlanning ? <CircularProgress size={20} color='inherit' /> : <i className='bx-refresh' />}
+          >
+            {syncingPlanning ? 'Requesting Planning...' : 'Sync Planning'}
+          </Button>
+          <Button
+            variant='contained'
+            onClick={handleSyncDetail}
+            disabled={syncingDetail}
+            startIcon={syncingDetail ? <CircularProgress size={20} color='inherit' /> : <i className='bx-refresh' />}
+          >
+            {syncingDetail ? 'Requesting Detail...' : 'Sync Detail'}
+          </Button>
+        </Box>
       </Grid>
 
       {/* Stock Level KPIs */}
@@ -122,8 +140,8 @@ const DashboardInventory = () => {
       <Grid size={{ xs: 12 }}>
         <Card>
           <CardHeader
-            title='All Inventory Items'
-            subheader={`${totalAsins} products synced from Amazon FBA`}
+            title='Detailed Inventory Items'
+            subheader={`${totalAsins} products synced from Amazon Reports (FBA MYI)`}
             action={
               <Chip
                 label={`Last synced: ${inventory[0]?.synced_at ? new Date(inventory[0].synced_at).toLocaleString() : '—'}`}
@@ -134,19 +152,29 @@ const DashboardInventory = () => {
             }
           />
           <Divider />
-          <CardContent>
+          <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
             <Box sx={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    {['Product Name', 'ASIN', 'SKU', 'FN SKU', 'Condition', 'Quantity', 'Status'].map(header => (
+                    {[
+                      'Product Name',
+                      'ASIN',
+                      'SKU',
+                      'FN SKU',
+                      'Condition',
+                      'Reserved',
+                      'Fulfillable',
+                      'Total',
+                      'Status'
+                    ].map(header => (
                       <th
                         key={header}
                         style={{
                           textAlign: 'left',
-                          padding: '12px 16px',
+                          padding: '16px',
                           borderBottom: '1px solid var(--mui-palette-divider)',
-                          fontSize: '0.75rem',
+                          fontSize: '0.875rem',
                           fontWeight: 600,
                           textTransform: 'uppercase',
                           color: 'var(--mui-palette-text-disabled)'
@@ -160,43 +188,53 @@ const DashboardInventory = () => {
                 <tbody>
                   {inventory.map((item, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid var(--mui-palette-divider)' }}>
-                      <td style={{ padding: '12px 16px', maxWidth: 250 }}>
-                        <Typography variant='body2' className='font-medium' noWrap>
+                      <td style={{ padding: '16px', maxWidth: 250 }}>
+                        <Typography variant='body1' className='font-medium' noWrap>
                           {item.product_name || '—'}
                         </Typography>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <Typography variant='body2' className='font-mono'>
-                          {item.asin}
+                      <td style={{ padding: '16px' }}>
+                        <Typography variant='body1' className='font-mono'>
+                          {item.asin || '—'}
                         </Typography>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <Typography variant='caption'>{item.seller_sku || '—'}</Typography>
+                      <td style={{ padding: '16px' }}>
+                        <Typography variant='body2'>{item.sku || '—'}</Typography>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <Typography variant='caption'>{item.fn_sku || '—'}</Typography>
+                      <td style={{ padding: '16px' }}>
+                        <Typography variant='body2'>{item.fn_sku || '—'}</Typography>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <Typography variant='caption'>{item.condition || '—'}</Typography>
+                      <td style={{ padding: '16px' }}>
+                        <Typography variant='body2'>{item.product_condition || '—'}</Typography>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <Typography variant='body2' className='font-semibold'>
-                          {(item.total_quantity || 0).toLocaleString()}
+                      <td style={{ padding: '16px' }}>
+                        <Typography variant='body1'>{(item.afn_reserved_quantity || 0).toLocaleString()}</Typography>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <Typography variant='body1'>{(item.afn_fulfillable_quantity || 0).toLocaleString()}</Typography>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <Typography variant='body1' className='font-semibold'>
+                          {(item.afn_total_quantity || 0).toLocaleString()}
                         </Typography>
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
+                      <td style={{ padding: '16px' }}>
                         <Chip
                           label={
-                            item.total_quantity === 0
+                            item.afn_total_quantity === 0
                               ? 'Out of Stock'
-                              : item.total_quantity <= 10
+                              : item.afn_total_quantity <= 10
                                 ? 'Low Stock'
                                 : 'In Stock'
                           }
-                          size='small'
+                          size='medium'
                           variant='tonal'
                           color={
-                            item.total_quantity === 0 ? 'error' : item.total_quantity <= 10 ? 'warning' : 'success'
+                            item.afn_total_quantity === 0
+                              ? 'error'
+                              : item.afn_total_quantity <= 10
+                                ? 'warning'
+                                : 'success'
                           }
                         />
                       </td>

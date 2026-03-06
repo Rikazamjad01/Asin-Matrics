@@ -21,7 +21,7 @@ const CustomTabList = styled(TabList)(({ theme }) => ({
   }
 }))
 
-const ReviewsTabsAndTables = ({ productData, dateRange }) => {
+const ReviewsTabsAndTables = ({ inventoryData, dateRange }) => {
   const [activeTab, setActiveTab] = useState('review-breakdown')
 
   const handleTabChange = (event, newValue) => {
@@ -59,7 +59,7 @@ const ReviewsTabsAndTables = ({ productData, dateRange }) => {
         </CustomTabList>
 
         <TabPanel value='review-breakdown' className='p-0'>
-          <ReviewsAsinTable productData={productData} />
+          <ReviewsAsinTable inventoryData={inventoryData} />
         </TabPanel>
 
         <TabPanel value='sentiment-trends' className='p-6 text-center'>
