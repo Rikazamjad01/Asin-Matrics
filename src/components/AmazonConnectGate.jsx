@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -17,6 +17,7 @@ export default function AmazonConnectGate({ children }) {
   const [isConnected, setIsConnected] = useState(false)
   const [userId, setUserId] = useState(null)
 
+  const router = useRouter()
   const searchParams = useSearchParams()
   const amazonError = searchParams.get('amazon_error')
   const amazonConnected = searchParams.get('amazon_connected')
@@ -29,6 +30,7 @@ export default function AmazonConnectGate({ children }) {
 
       if (!user) {
         setLoading(false)
+        router.push('/en/login') // Redirect to login page if no user
 
         return
       }
@@ -45,7 +47,7 @@ export default function AmazonConnectGate({ children }) {
     }
 
     checkConnection()
-  }, [amazonConnected]) // Re-run if query param changes
+  }, [amazonConnected, router]) // Re-run if query param changes
 
   if (loading) {
     return (
