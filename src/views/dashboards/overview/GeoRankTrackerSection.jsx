@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 
 // Next Imports
 import dynamic from 'next/dynamic'
+import { useParams, useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -13,6 +14,7 @@ import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import { useTheme } from '@mui/material/styles'
 
@@ -23,6 +25,9 @@ import classnames from 'classnames'
 import CustomAvatar from '@core/components/mui/Avatar'
 import SectionFilter from './SectionFilter'
 
+// Util Imports
+import { getLocalizedUrl } from '@/utils/i18n'
+
 // Styled Component Imports
 const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexCharts'))
 
@@ -31,6 +36,8 @@ import { getGeoRankData } from '@/libs/overview/overviewMockData'
 
 const GeoRankTrackerSection = () => {
   const theme = useTheme()
+  const router = useRouter()
+  const { lang: locale } = useParams()
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
   const [customDateRange, setCustomDateRange] = useState(null)
@@ -235,6 +242,17 @@ const GeoRankTrackerSection = () => {
           series={data.heatMapSeries}
           options={heatMapOptions}
         />
+
+        {/* Navigation Button */}
+        <div className='flex justify-end mbs-4'>
+          <Button
+            variant='contained'
+            endIcon={<i className='bx-right-arrow-alt' />}
+            onClick={() => router.push(getLocalizedUrl('/dashboards/rankings', locale))}
+          >
+            View Detailed Rankings
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

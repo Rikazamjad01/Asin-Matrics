@@ -19,6 +19,8 @@ import Switch from '@mui/material/Switch'
 import MenuItem from '@mui/material/MenuItem'
 import TablePagination from '@mui/material/TablePagination'
 import Typography from '@mui/material/Typography'
+import CircularProgress from '@mui/material/CircularProgress'
+import Box from '@mui/material/Box'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -102,42 +104,46 @@ const productStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const ProductListTable = ({ productData }) => {
-  // Initialize data with mocked fields
+const ProductListTable = ({ inventoryData, financesData, loading }) => {
+  // Map real fba_inventory rows to the shape the table columns expect.
+  // We use financesData to calculate revenue, fees, and profit.
   const initialData = useMemo(() => {
-    return (productData || []).map((product, index) => {
-      // Deterministic but pseudo-random generation based on ID
-      const seed = product.id * 12345
-      const mockAsin = `B0${Math.floor(Math.abs(Math.sin(seed) * 100000000))
-        .toString()
-        .padStart(8, '0')}`
+    return (inventoryData || []).map(item => {
+      const sku = item.seller_sku || item.fn_sku || '—'
 
-      const priceVal = parseFloat((product.price || '$0').replace(/[^0-9.-]+/g, '')) || 0
-      const units = product.qty || 0
+      // Filter financial events matching this product's SKU
+      const productFinances = (financesData || []).filter(f => f.seller_sku === sku || f.seller_sku === item.asin)
 
-      const revenue = priceVal * units
-      const marginPercent = 15 + Math.abs(Math.sin(seed + 1) * 35) // 15% to 50%
-      const cogs = revenue * (1 - marginPercent / 100) * 0.4 // Mock COGS ratio
-      const fees = revenue * 0.15 // Standard 15% referral fee roughly
-      const ppc = revenue * (0.05 + Math.abs(Math.sin(seed + 2) * 0.15)) // 5% to 20%
+      // Aggregate revenue and fees
+      const totalRevenue = productFinances.reduce((sum, f) => sum + (Number(f.revenue) || 0), 0)
+      const totalFees = Math.abs(productFinances.reduce((sum, f) => sum + (Number(f.fees) || 0), 0))
 
-      const profit = revenue - cogs - fees - ppc
-      const margin = revenue > 0 ? (profit / revenue) * 100 : 0
-      const acos = ppc > 0 ? (ppc / revenue) * 100 : 0
+      // Calculate profit and margin
+      const cogs = 0 // Mock COGS for now, would come from another table
+      const ppc = 0 // Mock PPC, requires Ads API
+
+      const profit = totalRevenue - totalFees - cogs - ppc
+      const margin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0
 
       return {
-        ...product,
-        asin: mockAsin,
-        revenue,
-        cogs,
-        fees,
-        ppc,
-        acos,
-        profit,
-        margin
+        id: item.id,
+        productName: item.product_name || '—',
+        productBrand: sku,
+        image: '', // No image from API
+        asin: item.asin || '—',
+        qty: item.total_quantity || 0,
+        status: 'Published', // Default — no status field in inventory API
+
+        revenue: totalRevenue,
+        cogs: cogs,
+        fees: totalFees,
+        ppc: ppc,
+        acos: 0,
+        profit: profit,
+        margin: margin
       }
     })
-  }, [productData])
+  }, [inventoryData, financesData])
 
   // States
   const [rowSelection, setRowSelection] = useState({})
@@ -158,6 +164,7 @@ const ProductListTable = ({ productData }) => {
     () => [
       {
         id: 'select',
+        size: 48,
         header: ({ table }) => (
           <Checkbox
             {...{
@@ -180,26 +187,55 @@ const ProductListTable = ({ productData }) => {
       },
       columnHelper.accessor('productName', {
         header: 'Product',
+        size: 250,
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            <img src={row.original.image} width={38} height={38} className='rounded bg-actionHover' />
-            <div className='flex flex-col'>
-              <Typography variant='h6'>{row.original.productName}</Typography>
-              <Typography variant='body2'>{row.original.productBrand}</Typography>
+            {row.original.image ? (
+              <img src={row.original.image} width={38} height={38} className='rounded bg-actionHover' />
+            ) : (
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  flexShrink: 0,
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'action.hover'
+                }}
+              >
+                <i className='bx-package text-textSecondary' style={{ fontSize: '1.2rem' }} />
+              </Box>
+            )}
+            <div
+              className='flex flex-col no-scrollbar'
+              style={{ overflowX: 'auto', whiteSpace: 'nowrap', cursor: 'pointer' }}
+            >
+              <Typography variant='h6' style={{ display: 'inline' }}>
+                {row.original.productName}
+              </Typography>
+              <br />
+              <Typography variant='body2' style={{ display: 'inline' }}>
+                {row.original.productBrand}
+              </Typography>
             </div>
           </div>
         )
       }),
       columnHelper.accessor('asin', {
         header: 'ASIN',
-        cell: ({ row }) => <Typography>{row.original.asin}</Typography>
+        size: 140,
+        cell: ({ row }) => <Typography noWrap>{row.original.asin}</Typography>
       }),
       columnHelper.accessor('qty', {
         header: 'Units',
+        size: 80,
         cell: ({ row }) => <Typography>{row.original.qty}</Typography>
       }),
       columnHelper.accessor('revenue', {
         header: 'Revenue',
+        size: 100,
         cell: ({ row }) => (
           <Typography>
             ${row.original.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -208,6 +244,7 @@ const ProductListTable = ({ productData }) => {
       }),
       columnHelper.accessor('cogs', {
         header: 'COGS',
+        size: 100,
         cell: ({ row }) => (
           <Chip
             label={`$${row.original.cogs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -219,6 +256,7 @@ const ProductListTable = ({ productData }) => {
       }),
       columnHelper.accessor('fees', {
         header: 'Fees',
+        size: 90,
         cell: ({ row }) => (
           <Typography>
             ${row.original.fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -227,6 +265,7 @@ const ProductListTable = ({ productData }) => {
       }),
       columnHelper.accessor('ppc', {
         header: 'PPC',
+        size: 90,
         cell: ({ row }) => (
           <Typography>
             ${row.original.ppc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -235,10 +274,12 @@ const ProductListTable = ({ productData }) => {
       }),
       columnHelper.accessor('acos', {
         header: 'ACOS',
+        size: 80,
         cell: ({ row }) => <Typography>{row.original.acos.toFixed(2)}%</Typography>
       }),
       columnHelper.accessor('profit', {
         header: 'Profit',
+        size: 100,
         cell: ({ row }) => (
           <Typography color={row.original.profit >= 0 ? 'success.main' : 'error.main'} className='font-medium'>
             ${row.original.profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -247,6 +288,7 @@ const ProductListTable = ({ productData }) => {
       }),
       columnHelper.accessor('margin', {
         header: 'Margin',
+        size: 80,
         cell: ({ row }) => (
           <Typography color={row.original.margin >= 0 ? 'success.main' : 'error.main'} className='font-medium'>
             {row.original.margin.toFixed(2)}%
@@ -255,6 +297,7 @@ const ProductListTable = ({ productData }) => {
       }),
       columnHelper.accessor('status', {
         header: 'Status',
+        size: 100,
         cell: ({ row }) => (
           <Chip
             label={productStatusObj[row.original.status].title}
@@ -281,7 +324,7 @@ const ProductListTable = ({ productData }) => {
     },
     initialState: {
       pagination: {
-        pageSize: 10
+        pageSize: 25
       }
     },
     enableRowSelection: true, //enable row selection for all rows
@@ -297,6 +340,14 @@ const ProductListTable = ({ productData }) => {
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
+
+  if (loading) {
+    return (
+      <Box className='flex justify-center items-center p-20'>
+        <CircularProgress />
+      </Box>
+    )
+  }
 
   return (
     <>
@@ -317,7 +368,7 @@ const ProductListTable = ({ productData }) => {
               onChange={e => table.setPageSize(Number(e.target.value))}
               className='flex-auto is-full sm:is-[70px]'
             >
-              <MenuItem value='10'>10</MenuItem>
+              {/* <MenuItem value='10'>10</MenuItem> */}
               <MenuItem value='25'>25</MenuItem>
               <MenuItem value='50'>50</MenuItem>
             </CustomTextField>
@@ -335,12 +386,19 @@ const ProductListTable = ({ productData }) => {
           </div>
         </div>
         <div className='overflow-x-auto'>
-          <table className={tableStyles.table}>
+          <table className={tableStyles.table} style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
-                    <th key={header.id}>
+                    <th
+                      key={header.id}
+                      style={{
+                        width: header.column.getSize(),
+                        maxWidth: header.column.getSize(),
+                        overflow: 'hidden'
+                      }}
+                    >
                       {header.isPlaceholder ? null : (
                         <>
                           <div
@@ -380,7 +438,16 @@ const ProductListTable = ({ productData }) => {
                     return (
                       <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
                         {row.getVisibleCells().map(cell => (
-                          <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                          <td
+                            key={cell.id}
+                            style={{
+                              width: cell.column.getSize(),
+                              maxWidth: cell.column.getSize(),
+                              overflow: 'hidden'
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
                         ))}
                       </tr>
                     )

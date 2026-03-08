@@ -1,38 +1,61 @@
 {
-  // JS
-  "javascript.updateImportsOnFileMove.enabled": "always",
-  // JSON
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
-  // VSCode Editor
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "cSpell.words": [
+    "customizer",
+    "iconify",
+    "tanstack"
+  ],
+  "css.validate": false,
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": [
+    "bare-node-builtins",
+    "byonm",
+    "sloppy-imports",
+    "unsafe-proto",
+    "webgpu",
+    "broadcast-channel",
+    "worker-options",
+    "cron",
+    "kv",
+    "ffi",
+    "fs",
+    "http",
+    "net"
+  ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "never",
-    "source.fixAll.stylelint": "explicit"
+    "source.fixAll.stylelint": "explicit",
+    "source.organizeImports": "never"
   },
-  // Extension: Git
-  "git.rebaseWhenSync": true,
-  "git.autofetch": true,
-  "git.enableSmartCommit": true,
-  // Extension: Prettier
-  "prettier.requireConfig": true,
-  // Extension: ESLint
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.linkedEditing": true,
+  "eslint.format.enable": true,
   "eslint.validate": [
     "javascript",
     "typescript",
     "javascriptreact",
     "typescriptreact"
   ],
-  "eslint.format.enable": true,
-  // Stylelint
-  "css.validate": false,
+  "files.insertFinalNewline": true,
+  "git.autofetch": true,
+  "git.enableSmartCommit": true,
+  "git.rebaseWhenSync": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
   "less.validate": false,
+  "markdown.extension.toc.updateOnSave": false,
+  "prettier.requireConfig": true,
   "scss.validate": false,
   "stylelint.enable": true,
   "stylelint.validate": [
@@ -41,13 +64,5 @@
     "typescript",
     "typescriptreact"
   ],
-  "markdown.extension.toc.updateOnSave": false,
-  "files.insertFinalNewline": true,
-  "editor.linkedEditing": true,
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": [
-    "customizer",
-    "iconify",
-    "tanstack"
-  ]
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

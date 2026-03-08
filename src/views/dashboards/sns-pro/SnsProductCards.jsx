@@ -12,45 +12,44 @@ import Divider from '@mui/material/Divider'
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
-const SnsProductCards = ({ productData }) => {
-  // Generate 6 mock cards taking the top elements from productData
-  const mockCards = useMemo(() => {
-    return (productData || []).slice(0, 6).map((p, index) => {
-      const seed = p.id * 999
-      const priceVal = parseFloat((p.price || '$0').replace(/[^0-9.-]+/g, '')) || 0
+const SnsProductCards = ({ inventoryData }) => {
+  // Take top 6 products by total quantity (most stock = most important to track)
+  const topProducts = useMemo(() => {
+    return (inventoryData || [])
+      .slice()
+      .sort((a, b) => (b.total_quantity || 0) - (a.total_quantity || 0))
+      .slice(0, 6)
+      .map((item, index) => ({
+        ...item,
+        rank: index + 1
+      }))
+  }, [inventoryData])
 
-      const snsCustomers = 120 + Math.floor(Math.abs(Math.sin(seed) * 800))
-      const monthlyEarning = snsCustomers * priceVal * 0.9
-      const shareOfRevenue = (15 + Math.abs(Math.sin(seed + 1) * 35)).toFixed(1)
-      const aov = monthlyEarning / snsCustomers
-      const growth = (Math.sin(seed + 2) * 25).toFixed(1)
-
-      return {
-        ...p,
-        rank: index + 1,
-        snsCustomers,
-        monthlyEarning,
-        shareOfRevenue,
-        aov,
-        growth: parseFloat(growth)
-      }
-    })
-  }, [productData])
+  if (!topProducts.length) {
+    return (
+      <Box className='text-center py-10'>
+        <i className='bx-package text-5xl text-textDisabled mb-3' />
+        <Typography color='text.secondary'>No inventory data available. Sync FBA Inventory first.</Typography>
+      </Box>
+    )
+  }
 
   return (
     <Grid container spacing={6}>
-      {mockCards.map(product => (
+      {topProducts.map(product => (
         <Grid size={{ xs: 12, md: 4 }} key={product.id}>
           <Card>
             <CardContent>
-              {/* Header: Name + Medals */}
+              {/* Header: Name + Rank Badge */}
               <Box className='flex items-start justify-between mb-1'>
                 <Box>
-                  <Typography variant='h5' className='truncate max-w-[200px]'>
-                    {product.productName}
+                  <Typography variant='h5' className='truncate max-w-[200px]' title={product.product_name}>
+                    {product.product_name
+                      ? product.product_name.substring(0, 40) + (product.product_name.length > 40 ? '…' : '')
+                      : '—'}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
-                    S&S Performance
+                    FBA Inventory
                   </Typography>
                 </Box>
                 <CustomAvatar
@@ -63,66 +62,56 @@ const SnsProductCards = ({ productData }) => {
               </Box>
 
               <Box className='flex flex-col gap-3 mt-6'>
-                {/* Customers Row */}
+                {/* ASIN */}
                 <Box className='flex justify-between items-center'>
                   <Typography variant='body1' fontWeight={500}>
-                    Customers
+                    ASIN
                   </Typography>
-                  <Typography variant='body2'>{product.snsCustomers.toLocaleString()}</Typography>
-                </Box>
-
-                {/* Earning Row */}
-                <Box className='flex justify-between items-center'>
-                  <Typography variant='body1' fontWeight={500}>
-                    Monthly Earning
-                  </Typography>
-                  <Typography variant='body2' color='text.primary' fontWeight={600}>
-                    $
-                    {product.monthlyEarning.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
+                  <Typography variant='body2' sx={{ fontFamily: 'monospace' }}>
+                    {product.asin || '—'}
                   </Typography>
                 </Box>
 
-                {/* Shares of Revenue Row */}
+                {/* SKU */}
                 <Box className='flex justify-between items-center'>
                   <Typography variant='body1' fontWeight={500}>
-                    Share of S&S Revenue
+                    Seller SKU
                   </Typography>
-                  <Typography variant='body2'>{product.shareOfRevenue}%</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    {product.seller_sku || product.fn_sku || '—'}
+                  </Typography>
                 </Box>
 
-                {/* AOV Row */}
+                {/* Total Qty */}
                 <Box className='flex justify-between items-center'>
                   <Typography variant='body1' fontWeight={500}>
-                    AOV
+                    Total Qty
                   </Typography>
-                  <Typography variant='body2'>
-                    ${product.aov.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <Typography variant='body2' fontWeight={600}>
+                    {(product.total_quantity || 0).toLocaleString()} units
                   </Typography>
+                </Box>
+
+                {/* Condition */}
+                <Box className='flex justify-between items-center'>
+                  <Typography variant='body1' fontWeight={500}>
+                    Condition
+                  </Typography>
+                  <Typography variant='body2'>{product.condition || '—'}</Typography>
                 </Box>
 
                 <Divider className='my-2' />
 
-                {/* Growth Row */}
+                {/* Rank indicator */}
                 <Box className='flex justify-between items-center'>
                   <Typography variant='body1' fontWeight={500}>
-                    Growth
+                    Stock Rank
                   </Typography>
                   <Box className='flex items-center gap-1'>
-                    <Typography
-                      variant='body2'
-                      fontWeight={600}
-                      color={product.growth >= 0 ? 'success.main' : 'error.main'}
-                    >
-                      {product.growth > 0 ? '+' : ''}
-                      {product.growth}%
+                    <Typography variant='body2' fontWeight={600} color='primary.main'>
+                      #{product.rank}
                     </Typography>
-                    <i
-                      className={product.growth >= 0 ? 'bx-trending-up text-success' : 'bx-trending-down text-error'}
-                      style={{ fontSize: '1.2rem' }}
-                    />
+                    <i className='bx-bar-chart-alt-2 text-primary' style={{ fontSize: '1.2rem' }} />
                   </Box>
                 </Box>
               </Box>

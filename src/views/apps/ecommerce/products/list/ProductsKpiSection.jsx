@@ -7,6 +7,7 @@ import { useMemo } from 'react'
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -14,90 +15,106 @@ import classnames from 'classnames'
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
-// Data Import (Helpers)
-import { getProductsKpiData } from '@/libs/products/productsMockData'
+const ProductsKpiSection = ({ inventoryData, financesData }) => {
+  const stats = useMemo(() => {
+    const rows = inventoryData || []
+    const finances = financesData || []
 
-// Formatters
-const fmtCurrency = val => `$${val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-const fmtNumber = val => val.toLocaleString('en-US')
+    // Real computable values from fba_inventory
+    const totalUnits = rows.reduce((sum, r) => sum + (r.total_quantity || 0), 0)
+    const portfolio = new Set(rows.map(r => r.asin).filter(Boolean)).size
 
-const ProductsKpiSection = ({ dateRange }) => {
-  const data = useMemo(() => getProductsKpiData(dateRange), [dateRange])
+    // Calculate aggregated financial metrics
+    let totalRevenue = 0
+    let totalFees = 0
+
+    finances.forEach(f => {
+      totalRevenue += Number(f.revenue) || 0
+      totalFees += Math.abs(Number(f.fees) || 0)
+    })
+
+    const netProfit = totalRevenue - totalFees
+
+    return { totalUnits, portfolio, totalRevenue, netProfit }
+  }, [inventoryData, financesData])
 
   const tiles = [
     {
       icon: 'bx-dollar-circle',
       color: 'primary',
       label: 'Total Revenue',
-      value: fmtCurrency(data.totalRevenue.value),
-      trend: data.totalRevenue.trend,
-      percent: data.totalRevenue.percent
+      value: financesData
+        ? `$${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '—',
+      trend: 'neutral',
+      percent: 0
     },
     {
       icon: 'bx-wallet',
       color: 'success',
       label: 'Net Profit',
-      value: fmtCurrency(data.netProfit.value),
-      trend: data.netProfit.trend,
-      percent: data.netProfit.percent
+      value: financesData
+        ? `$${stats.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '—',
+      trend: 'neutral',
+      percent: 0
     },
     {
       icon: 'bx-line-chart',
       color: 'info',
       label: 'PPC ROI',
-      value: `${data.ppcRoi.value}x`,
-      trend: data.ppcRoi.trend,
-      percent: data.ppcRoi.percent
+      value: '—',
+      trend: 'neutral',
+      percent: 0
     },
     {
       icon: 'bx-briefcase',
       color: 'warning',
       label: 'Portfolio',
-      value: fmtNumber(data.portfolio.value),
-      trend: data.portfolio.trend,
-      percent: data.portfolio.percent
+      value: stats.portfolio > 0 ? stats.portfolio.toLocaleString() : inventoryData ? '0' : '—',
+      trend: 'neutral',
+      percent: 0
     },
     {
       icon: 'bx-target-lock',
       color: 'error',
       label: 'Avg ACoS',
-      value: `${data.avgAcos.value}%`,
-      trend: data.avgAcos.trend, // ACoS going down is good
-      percent: data.avgAcos.percent,
-      inverseTrendColor: true // Negative trend (down) should be green
+      value: '—',
+      trend: 'neutral',
+      percent: 0,
+      inverseTrendColor: true
     },
     {
       icon: 'bx-bullseye',
       color: 'secondary',
       label: 'Avg TACoS',
-      value: `${data.avgTacos.value}%`,
-      trend: data.avgTacos.trend,
-      percent: data.avgTacos.percent,
-      inverseTrendColor: true // TACoS going down is good
+      value: '—',
+      trend: 'neutral',
+      percent: 0,
+      inverseTrendColor: true
     },
     {
       icon: 'bx-cart',
       color: 'primary',
-      label: 'Total Units Sold',
-      value: fmtNumber(data.totalUnitsSold.value),
-      trend: data.totalUnitsSold.trend,
-      percent: data.totalUnitsSold.percent
+      label: 'Total Units',
+      value: stats.totalUnits > 0 ? stats.totalUnits.toLocaleString() : inventoryData ? '0' : '—',
+      trend: 'neutral',
+      percent: 0
     },
     {
       icon: 'bx-coin-stack',
       color: 'error',
       label: 'Avg COGS',
-      value: fmtCurrency(data.avgCogs.value),
-      trend: data.avgCogs.trend,
-      percent: data.avgCogs.percent,
-      inverseTrendColor: true // COGS going down is good
+      value: '—',
+      trend: 'neutral',
+      percent: 0,
+      inverseTrendColor: true
     }
   ]
 
   return (
     <Grid container spacing={4}>
       {tiles.map((tile, i) => {
-        // Calculate dynamic trend color based on inverse flag (e.g. for ACoS where lower is better)
         let trendColor = 'text.secondary'
         let iconClass = ''
 

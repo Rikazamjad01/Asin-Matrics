@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 // Next Imports
 import dynamic from 'next/dynamic'
+import { useParams, useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -12,6 +13,7 @@ import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import LinearProgress from '@mui/material/LinearProgress'
 import { useTheme } from '@mui/material/styles'
@@ -23,11 +25,14 @@ import classnames from 'classnames'
 import CustomAvatar from '@core/components/mui/Avatar'
 import SectionFilter from './SectionFilter'
 
+// Util Imports
+import { getLocalizedUrl } from '@/utils/i18n'
+
 // Styled Component Imports
 const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexCharts'))
 
-// Mock Data
-import { getReviewRequestData } from '@/libs/overview/overviewMockData'
+// Supabase Client
+import { supabase } from '@/utils/supabase/client'
 
 const starColors = {
   5: 'success',
@@ -39,14 +44,52 @@ const starColors = {
 
 const ReviewRequestSection = () => {
   const theme = useTheme()
+  const router = useRouter()
+  const { lang: locale } = useParams()
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
   const [customDateRange, setCustomDateRange] = useState(null)
 
-  const data = useMemo(
-    () => getReviewRequestData(product, dateRange, customDateRange),
-    [product, dateRange, customDateRange]
-  )
+  const [solicitationCount, setSolicitationCount] = useState(0)
+
+  useEffect(() => {
+    const fetchSolicitations = async () => {
+      const { count } = await supabase
+        .from('solicitations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'sent')
+
+      if (count !== null) {
+        setSolicitationCount(count)
+      }
+    }
+
+    fetchSolicitations()
+  }, [])
+
+  const data = useMemo(() => {
+    // We only have real data for Requests Sent via the Amazon SP-API.
+    // Amazon does NOT provide an API for reading incoming reviews, ratings, or conversions.
+    // These must be grabbed via 3rd party web scraping APIs (e.g. Rainforest API).
+    // Therefore, we use the real count for 'requestsSent' and preserve the mock format for the rest.
+    return {
+      requestsSent: { value: solicitationCount, trend: 'positive', percent: 0 },
+      reviewsReceived: { value: 642, trend: 'positive', percent: 18.4 },
+      conversionRate: { value: 12.5, trend: 'positive', percent: 2.1 },
+      avgRating: { value: 4.6, trend: 'negative', percent: 0.2 },
+      reviewTrend: {
+        categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        data: [42, 58, 48, 65, 52, 70, 64]
+      },
+      ratingDistribution: [
+        { stars: 5, percent: 72, count: 462 },
+        { stars: 4, percent: 18, count: 115 },
+        { stars: 3, percent: 6, count: 38 },
+        { stars: 2, percent: 3, count: 19 },
+        { stars: 1, percent: 1, count: 8 }
+      ]
+    }
+  }, [solicitationCount])
 
   // Reviews Received Trend chart
   const trendOptions = {
@@ -226,6 +269,17 @@ const ReviewRequestSection = () => {
             </Box>
           </Grid>
         </Grid>
+
+        {/* Navigation Button */}
+        <div className='flex justify-end mbs-4'>
+          <Button
+            variant='contained'
+            endIcon={<i className='bx-right-arrow-alt' />}
+            onClick={() => router.push(getLocalizedUrl('/dashboards/reviews', locale))}
+          >
+            View All Reviews
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

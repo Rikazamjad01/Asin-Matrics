@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // MUI Imports
 import Grid from '@mui/material/Grid2'
@@ -10,6 +10,8 @@ import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
 import { styled } from '@mui/material/styles'
 
 // Component Imports
@@ -19,6 +21,9 @@ import ProductListTable from './ProductListTable'
 import AnalyticsTable from './AnalyticsTable'
 import AiInsightsTable from './AiInsightsTable'
 import ForecastTable from './ForecastTable'
+
+// Supabase Client
+import { supabase } from '@/utils/supabase/client'
 
 // Styled TabList wrapper
 const CustomTabList = styled(TabList)(({ theme }) => ({
@@ -37,6 +42,42 @@ const ProductsDashboard = ({ initialData }) => {
   const [customDateRange, setCustomDateRange] = useState(null)
   const [activeTab, setActiveTab] = useState('products')
 
+  // Real inventory data
+  const [inventoryData, setInventoryData] = useState([])
+  const [financesData, setFinancesData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+
+  const fetchInventoryAndFinances = async () => {
+    setLoading(true)
+
+    const [inventoryRes, financesRes] = await Promise.all([
+      supabase.from('fba_inventory').select('*').order('product_name', { ascending: true }),
+      supabase.from('financial_events').select('*')
+    ])
+
+    if (!inventoryRes.error && inventoryRes.data) setInventoryData(inventoryRes.data)
+    if (!financesRes.error && financesRes.data) setFinancesData(financesRes.data)
+
+    setLoading(false)
+  }
+
+  const handleSync = async () => {
+    setSyncing(true)
+
+    await Promise.all([
+      supabase.functions.invoke('amazon-sp-api-sync', { body: { action: 'inventory' } }),
+      supabase.functions.invoke('amazon-sp-api-sync', { body: { action: 'finances' } })
+    ])
+
+    await fetchInventoryAndFinances()
+    setSyncing(false)
+  }
+
+  useEffect(() => {
+    fetchInventoryAndFinances()
+  }, [])
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
   }
@@ -49,18 +90,28 @@ const ProductsDashboard = ({ initialData }) => {
           <Typography variant='h5' fontWeight={700}>
             Products Dashboard
           </Typography>
-          <GlobalTimeFilter
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            customDateRange={customDateRange}
-            onCustomDateRangeChange={setCustomDateRange}
-          />
+          <div className='flex items-center gap-3'>
+            <Button
+              variant='contained'
+              onClick={handleSync}
+              disabled={syncing}
+              startIcon={syncing ? <CircularProgress size={18} color='inherit' /> : <i className='bx-refresh' />}
+            >
+              {syncing ? 'Syncing...' : 'Sync Data'}
+            </Button>
+            <GlobalTimeFilter
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              customDateRange={customDateRange}
+              onCustomDateRangeChange={setCustomDateRange}
+            />
+          </div>
         </div>
       </Grid>
 
       {/* 2. KPI Section */}
       <Grid size={{ xs: 12 }}>
-        <ProductsKpiSection dateRange={dateRange} />
+        <ProductsKpiSection inventoryData={inventoryData} financesData={financesData} />
       </Grid>
 
       {/* 3. Tabs & Tables */}
@@ -74,7 +125,7 @@ const ProductsDashboard = ({ initialData }) => {
           </CustomTabList>
 
           <TabPanel value='products' className='p-0'>
-            <ProductListTable productData={initialData} />
+            <ProductListTable inventoryData={inventoryData} financesData={financesData} loading={loading} />
           </TabPanel>
           <TabPanel value='analytics' className='p-0'>
             <AnalyticsTable dateRange={dateRange} />

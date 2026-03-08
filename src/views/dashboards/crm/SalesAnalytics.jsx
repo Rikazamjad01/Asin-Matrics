@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 // Next Imports
 import dynamic from 'next/dynamic'
@@ -27,299 +27,77 @@ import { rgbaToHex } from '@/utils/rgbaToHex'
 // Styled Component Imports
 const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexCharts'))
 
-// Mock data for different years
-const seriesByYear = {
-  2024: [
-    {
-      name: '1k',
-      data: [
-        { x: 'Jan', y: '250' },
-        { x: 'Feb', y: '350' },
-        { x: 'Mar', y: '220' },
-        { x: 'Apr', y: '290' },
-        { x: 'May', y: '650' },
-        { x: 'Jun', y: '260' },
-        { x: 'Jul', y: '274' },
-        { x: 'Aug', y: '850' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    },
-    {
-      name: '2k',
-      data: [
-        { x: 'Jan', y: '750' },
-        { x: 'Feb', y: '3350' },
-        { x: 'Mar', y: '1220' },
-        { x: 'Apr', y: '1290' },
-        { x: 'May', y: '1650' },
-        { x: 'Jun', y: '1260' },
-        { x: 'Jul', y: '1274' },
-        { x: 'Aug', y: '850' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    },
-    {
-      name: '3k',
-      data: [
-        { x: 'Jan', y: '375' },
-        { x: 'Feb', y: '1350' },
-        { x: 'Mar', y: '3220' },
-        { x: 'Apr', y: '2290' },
-        { x: 'May', y: '2650' },
-        { x: 'Jun', y: '2260' },
-        { x: 'Jul', y: '1274' },
-        { x: 'Aug', y: '815' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    },
-    {
-      name: '4k',
-      data: [
-        { x: 'Jan', y: '575' },
-        { x: 'Feb', y: '1350' },
-        { x: 'Mar', y: '2220' },
-        { x: 'Apr', y: '3290' },
-        { x: 'May', y: '3650' },
-        { x: 'Jun', y: '2260' },
-        { x: 'Jul', y: '1274' },
-        { x: 'Aug', y: '315' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    },
-    {
-      name: '5k',
-      data: [
-        { x: 'Jan', y: '875' },
-        { x: 'Feb', y: '1350' },
-        { x: 'Mar', y: '2220' },
-        { x: 'Apr', y: '3290' },
-        { x: 'May', y: '3650' },
-        { x: 'Jun', y: '2260' },
-        { x: 'Jul', y: '1274' },
-        { x: 'Aug', y: '965' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    },
-    {
-      name: '5k+',
-      data: [
-        { x: 'Jan', y: '575' },
-        { x: 'Feb', y: '1350' },
-        { x: 'Mar', y: '2220' },
-        { x: 'Apr', y: '2290' },
-        { x: 'May', y: '2650' },
-        { x: 'Jun', y: '3260' },
-        { x: 'Jul', y: '1274' },
-        { x: 'Aug', y: '815' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    },
-    {
-      name: '10k+',
-      data: [
-        { x: 'Jan', y: '575' },
-        { x: 'Feb', y: '350' },
-        { x: 'Mar', y: '220' },
-        { x: 'Apr', y: '290' },
-        { x: 'May', y: '650' },
-        { x: 'Jun', y: '260' },
-        { x: 'Jul', y: '274' },
-        { x: 'Aug', y: '815' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    },
-    {
-      name: '15k+',
-      data: [
-        { x: 'Jan', y: '575' },
-        { x: 'Feb', y: '350' },
-        { x: 'Mar', y: '220' },
-        { x: 'Apr', y: '290' },
-        { x: 'May', y: '650' },
-        { x: 'Jun', y: '260' },
-        { x: 'Jul', y: '274' },
-        { x: 'Aug', y: '815' },
-        { x: 'Sep', y: '850' },
-        { x: 'Oct', y: '850' },
-        { x: 'Nov', y: '850' },
-        { x: 'Dec', y: '850' }
-      ]
-    }
-  ],
-  2025: [
-    {
-      name: '1k',
-      data: [
-        { x: 'Jan', y: '320' },
-        { x: 'Feb', y: '420' },
-        { x: 'Mar', y: '310' },
-        { x: 'Apr', y: '380' },
-        { x: 'May', y: '720' },
-        { x: 'Jun', y: '340' },
-        { x: 'Jul', y: '360' },
-        { x: 'Aug', y: '920' },
-        { x: 'Sep', y: '910' },
-        { x: 'Oct', y: '930' },
-        { x: 'Nov', y: '940' },
-        { x: 'Dec', y: '950' }
-      ]
-    },
-    {
-      name: '2k',
-      data: [
-        { x: 'Jan', y: '820' },
-        { x: 'Feb', y: '3450' },
-        { x: 'Mar', y: '1320' },
-        { x: 'Apr', y: '1390' },
-        { x: 'May', y: '1750' },
-        { x: 'Jun', y: '1360' },
-        { x: 'Jul', y: '1380' },
-        { x: 'Aug', y: '950' },
-        { x: 'Sep', y: '920' },
-        { x: 'Oct', y: '940' },
-        { x: 'Nov', y: '960' },
-        { x: 'Dec', y: '980' }
-      ]
-    },
-    {
-      name: '3k',
-      data: [
-        { x: 'Jan', y: '450' },
-        { x: 'Feb', y: '1450' },
-        { x: 'Mar', y: '3320' },
-        { x: 'Apr', y: '2390' },
-        { x: 'May', y: '2750' },
-        { x: 'Jun', y: '2360' },
-        { x: 'Jul', y: '1380' },
-        { x: 'Aug', y: '920' },
-        { x: 'Sep', y: '950' },
-        { x: 'Oct', y: '960' },
-        { x: 'Nov', y: '970' },
-        { x: 'Dec', y: '990' }
-      ]
-    },
-    {
-      name: '4k',
-      data: [
-        { x: 'Jan', y: '680' },
-        { x: 'Feb', y: '1450' },
-        { x: 'Mar', y: '2320' },
-        { x: 'Apr', y: '3390' },
-        { x: 'May', y: '3750' },
-        { x: 'Jun', y: '2380' },
-        { x: 'Jul', y: '1390' },
-        { x: 'Aug', y: '420' },
-        { x: 'Sep', y: '960' },
-        { x: 'Oct', y: '980' },
-        { x: 'Nov', y: '1000' },
-        { x: 'Dec', y: '1020' }
-      ]
-    },
-    {
-      name: '5k',
-      data: [
-        { x: 'Jan', y: '980' },
-        { x: 'Feb', y: '1480' },
-        { x: 'Mar', y: '2350' },
-        { x: 'Apr', y: '3420' },
-        { x: 'May', y: '3780' },
-        { x: 'Jun', y: '2420' },
-        { x: 'Jul', y: '1420' },
-        { x: 'Aug', y: '1080' },
-        { x: 'Sep', y: '1000' },
-        { x: 'Oct', y: '1020' },
-        { x: 'Nov', y: '1040' },
-        { x: 'Dec', y: '1060' }
-      ]
-    },
-    {
-      name: '5k+',
-      data: [
-        { x: 'Jan', y: '690' },
-        { x: 'Feb', y: '1480' },
-        { x: 'Mar', y: '2380' },
-        { x: 'Apr', y: '2450' },
-        { x: 'May', y: '2820' },
-        { x: 'Jun', y: '3420' },
-        { x: 'Jul', y: '1450' },
-        { x: 'Aug', y: '950' },
-        { x: 'Sep', y: '1010' },
-        { x: 'Oct', y: '1030' },
-        { x: 'Nov', y: '1050' },
-        { x: 'Dec', y: '1070' }
-      ]
-    },
-    {
-      name: '10k+',
-      data: [
-        { x: 'Jan', y: '720' },
-        { x: 'Feb', y: '480' },
-        { x: 'Mar', y: '350' },
-        { x: 'Apr', y: '420' },
-        { x: 'May', y: '780' },
-        { x: 'Jun', y: '380' },
-        { x: 'Jul', y: '390' },
-        { x: 'Aug', y: '980' },
-        { x: 'Sep', y: '1020' },
-        { x: 'Oct', y: '1040' },
-        { x: 'Nov', y: '1060' },
-        { x: 'Dec', y: '1080' }
-      ]
-    },
-    {
-      name: '15k+',
-      data: [
-        { x: 'Jan', y: '690' },
-        { x: 'Feb', y: '450' },
-        { x: 'Mar', y: '320' },
-        { x: 'Apr', y: '390' },
-        { x: 'May', y: '750' },
-        { x: 'Jun', y: '350' },
-        { x: 'Jul', y: '370' },
-        { x: 'Aug', y: '950' },
-        { x: 'Sep', y: '1000' },
-        { x: 'Oct', y: '1020' },
-        { x: 'Nov', y: '1040' },
-        { x: 'Dec', y: '1060' }
-      ]
-    }
-  ]
-}
+// Supabase client
+import { supabase } from '@/utils/supabase/client'
+
+// Removed mock seriesByYear
 
 const SalesAnalytics = () => {
   // States
   const [open, setOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(1)
+  const [events, setEvents] = useState([])
 
   // Hooks
   const theme = useTheme()
 
   // Vars
-  const dropdownOptions = [`${new Date().getFullYear() - 1}`, `${new Date().getFullYear()}`, 'Custom Range']
+  const dropdownOptions = [`${new Date().getFullYear() - 1}`, `${new Date().getFullYear()}`, 'All Time']
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase.from('financial_events').select('*')
+
+      if (!error && data) {
+        setEvents(data)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   // Get current series based on selected year
-  const currentSeries = seriesByYear[dropdownOptions[selectedIndex]] || seriesByYear['2025']
+  const selectedYear = dropdownOptions[selectedIndex]
+
+  // Map events to dynamic monthly heatmap
+  const getDynamicSeries = () => {
+    // group by product/seller_sku
+    const seriesMap = {}
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+    events.forEach(e => {
+      const date = new Date(e.posted_date)
+
+      if (selectedYear !== 'All Time' && date.getFullYear().toString() !== selectedYear) return
+
+      const month = months[date.getMonth()]
+      const sku = e.seller_sku || 'Unknown'
+
+      if (!seriesMap[sku]) {
+        seriesMap[sku] = {}
+        months.forEach(m => (seriesMap[sku][m] = 0))
+      }
+
+      // Add revenue to that cell mapping
+      seriesMap[sku][month] += Number(e.revenue) || 0
+    })
+
+    const finalSeries = Object.keys(seriesMap).map(sku => {
+      return {
+        name: sku,
+        data: months.map(m => ({ x: m, y: Math.round(seriesMap[sku][m]) }))
+      }
+    })
+
+    if (finalSeries.length === 0) {
+      // Return empty skeleton to prevent crash
+      return [{ name: 'No Data', data: months.map(m => ({ x: m, y: 0 })) }]
+    }
+
+    return finalSeries
+  }
+
+  const currentSeries = getDynamicSeries()
 
   // Refs
   const anchorRef = useRef(null)
@@ -425,8 +203,7 @@ const SalesAnalytics = () => {
         title='Sales Analytics'
         subheader={
           <div className='flex gap-x-2 mbs-1'>
-            <Chip label='+42.6%' color='success' size='small' variant='tonal' />
-            <Typography>Than last year</Typography>
+            <Typography>Monthly Revenue Heatmap from FBA</Typography>
           </div>
         }
         action={

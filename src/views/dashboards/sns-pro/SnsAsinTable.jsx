@@ -6,7 +6,6 @@ import { useMemo, useState } from 'react'
 // MUI Imports
 import Typography from '@mui/material/Typography'
 import TablePagination from '@mui/material/TablePagination'
-import classnames from 'classnames'
 
 // Third-party Imports
 import {
@@ -18,7 +17,6 @@ import {
 } from '@tanstack/react-table'
 
 // Component Imports
-import CustomAvatar from '@core/components/mui/Avatar'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 
 // Style Imports
@@ -26,84 +24,55 @@ import tableStyles from '@core/styles/table.module.css'
 
 const columnHelper = createColumnHelper()
 
-const SnsAsinTable = ({ productData }) => {
-  // Generate mock S&S data securely
+const SnsAsinTable = ({ inventoryData }) => {
   const tableData = useMemo(() => {
-    return (productData || []).map(p => {
-      const seed = p.id * 8888
-
-      const asin = `B0${Math.floor(Math.abs(Math.sin(seed) * 100000000))
-        .toString()
-        .padStart(8, '0')}`
-
-      const priceVal = parseFloat((p.price || '$0').replace(/[^0-9.-]+/g, '')) || 0
-
-      const snsCustomers = 50 + Math.floor(Math.abs(Math.sin(seed + 1) * 450))
-      const snsRevenue = snsCustomers * priceVal * 0.9 // 10% S&S discount
-      const pctOfTotal = 15 + Math.abs(Math.sin(seed + 2) * 25) // 15% - 40%
-      const growth = (Math.sin(seed + 3) * 15).toFixed(1) // -15% to +15%
-      const aov = snsRevenue / snsCustomers
-
-      return {
-        id: p.id,
-        asin,
-        snsCustomers,
-        snsRevenue,
-        pctOfTotal,
-        growth: parseFloat(growth),
-        aov
-      }
-    })
-  }, [productData])
+    return (inventoryData || []).map(item => ({
+      id: item.id,
+      asin: item.asin || '—',
+      sku: item.seller_sku || item.fn_sku || '—',
+      productName: item.product_name || '—',
+      condition: item.condition || '—',
+      totalQuantity: item.total_quantity || 0
+    }))
+  }, [inventoryData])
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('asin', {
-        header: 'ASIN (ID)',
+        header: 'ASIN',
         cell: ({ row }) => (
-          <Typography color='primary' className='font-medium'>
+          <Typography color='primary' className='font-medium' sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
             {row.original.asin}
           </Typography>
         )
       }),
-      columnHelper.accessor('snsCustomers', {
-        header: 'S&S Customers',
-        cell: ({ row }) => <Typography>{row.original.snsCustomers}</Typography>
-      }),
-      columnHelper.accessor('snsRevenue', {
-        header: 'Monthly Revenue',
+      columnHelper.accessor('sku', {
+        header: 'Seller SKU',
         cell: ({ row }) => (
-          <Typography>
-            ${row.original.snsRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <Typography variant='body2' color='text.secondary'>
+            {row.original.sku}
           </Typography>
         )
       }),
-      columnHelper.accessor('pctOfTotal', {
-        header: '% of Total',
-        cell: ({ row }) => <Typography>{row.original.pctOfTotal.toFixed(1)}%</Typography>
-      }),
-      columnHelper.accessor('growth', {
-        header: 'Growth',
+      columnHelper.accessor('productName', {
+        header: 'Product Name',
         cell: ({ row }) => (
-          <div className='flex items-center gap-1 mt-1'>
-            <CustomAvatar skin='light' color={row.original.growth >= 0 ? 'success' : 'error'} size={24}>
-              <i
-                className={classnames('text-base', row.original.growth >= 0 ? 'bx-trending-up' : 'bx-trending-down')}
-              />
-            </CustomAvatar>
-            <Typography color={row.original.growth >= 0 ? 'success.main' : 'error.main'} className='font-medium'>
-              {row.original.growth > 0 ? '+' : ''}
-              {row.original.growth}%
-            </Typography>
-          </div>
+          <Typography
+            variant='body2'
+            sx={{ maxWidth: 320, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {row.original.productName}
+          </Typography>
         )
       }),
-      columnHelper.accessor('aov', {
-        header: 'Avg Order Value',
+      columnHelper.accessor('condition', {
+        header: 'Condition',
+        cell: ({ row }) => <Typography variant='body2'>{row.original.condition}</Typography>
+      }),
+      columnHelper.accessor('totalQuantity', {
+        header: 'Total Qty',
         cell: ({ row }) => (
-          <Typography>
-            ${row.original.aov.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Typography>
+          <Typography className='font-medium'>{row.original.totalQuantity.toLocaleString()}</Typography>
         )
       })
     ],
@@ -117,10 +86,19 @@ const SnsAsinTable = ({ productData }) => {
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: {
-        pageSize: 5
+        pageSize: 10
       }
     }
   })
+
+  if (!inventoryData || inventoryData.length === 0) {
+    return (
+      <div className='p-6 text-center'>
+        <i className='bx-package text-5xl text-textSecondary mb-3' />
+        <Typography color='text.secondary'>No inventory data. Sync FBA Inventory first.</Typography>
+      </div>
+    )
+  }
 
   return (
     <div className='overflow-x-auto'>
@@ -152,7 +130,7 @@ const SnsAsinTable = ({ productData }) => {
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}
         onPageChange={(_, page) => table.setPageIndex(page)}
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={[10, 25, 50]}
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
     </div>

@@ -38,6 +38,7 @@
     "@mui/material-nextjs": "6.2.1",
     "@prisma/client": "5.22.0",
     "@reduxjs/toolkit": "2.5.0",
+    "@supabase/supabase-js": "^2.98.0",
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-table": "8.20.6",
     "@tiptap/extension-color": "^2.10.4",
@@ -101,6 +102,7 @@
     "stylelint-use-logical-spec": "5.0.1",
     "stylis": "4.3.4",
     "stylis-plugin-rtl": "2.1.1",
+    "supabase": "^2.76.16",
     "tailwindcss": "3.4.17",
     "tailwindcss-logical": "3.0.1",
     "tsx": "4.19.2"

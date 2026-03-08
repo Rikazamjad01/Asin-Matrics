@@ -2,16 +2,22 @@
 
 import { useState, useMemo } from 'react'
 
+import { useParams, useRouter } from 'next/navigation'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
+import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid2'
 
 // Components Imports
 import Vertical from '@components/card-statistics/Vertical'
 import SectionFilter from './SectionFilter'
+
+// Util Imports
+import { getLocalizedUrl } from '@/utils/i18n'
 
 // Mock Data
 import { getKpiData } from '@/libs/overview/overviewMockData'
@@ -20,6 +26,9 @@ import { getKpiData } from '@/libs/overview/overviewMockData'
 import { fmt } from '@/libs/ppc/calculationEngine'
 
 const PpcPerformanceSection = () => {
+  const router = useRouter()
+  const { lang: locale } = useParams()
+
   // KPI Section filter state
   const [product, setProduct] = useState('all')
   const [dateRange, setDateRange] = useState('7d')
@@ -131,6 +140,17 @@ const PpcPerformanceSection = () => {
             />
           </Grid>
         </Grid>
+
+        {/* Navigation Button */}
+        <div className='flex justify-end mbs-4'>
+          <Button
+            variant='contained'
+            endIcon={<i className='bx-right-arrow-alt' />}
+            onClick={() => router.push(getLocalizedUrl('/dashboards/advertising', locale))}
+          >
+            View PPC Dashboard
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
