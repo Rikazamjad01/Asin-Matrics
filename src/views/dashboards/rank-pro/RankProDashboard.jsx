@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // MUI Imports
 import Grid from '@mui/material/Grid2'
@@ -13,15 +13,20 @@ import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import LinearProgress from '@mui/material/LinearProgress'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Utility Imports
 import classnames from 'classnames'
+
+// Supabase Client
 
 // MUI Imports
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import { styled } from '@mui/material/styles'
+
+import { supabase } from '@/utils/supabase/client'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -63,11 +68,35 @@ const KpiTile = ({ title, value, subtitle, icon, color }) => (
 )
 
 const RankProDashboard = () => {
-  const [activeAsin, setActiveAsin] = useState('asin1')
+  const [activeAsin, setActiveAsin] = useState('none')
   const [dateRange, setDateRange] = useState('7d')
   const [customDateRange, setCustomDateRange] = useState(null)
   const [activeKeywordTab, setActiveKeywordTab] = useState('all')
   const [activeSectionTab, setActiveSectionTab] = useState('tracking')
+
+  const [asins, setAsins] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchTopAsins = async () => {
+    setLoading(true)
+
+    const { data, error } = await supabase
+      .from('fba_inventory_detail')
+      .select('asin, product_name, afn_total_quantity')
+      .order('afn_total_quantity', { ascending: false })
+      .limit(3)
+
+    if (!error && data && data.length > 0) {
+      setAsins(data)
+      setActiveAsin(data[0].asin)
+    }
+
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchTopAsins()
+  }, [])
 
   return (
     <Grid container spacing={6}>
@@ -82,22 +111,31 @@ const RankProDashboard = () => {
               Amazon keyword Rank Trackor
             </Typography>
           </div>
-          <div className='flex flex-wrap items-center gap-4'>
+          <div className='flex flex-wrap items-center justify-between w-full gap-4'>
             <div className='flex items-center gap-2'>
               <Typography className='font-medium' sx={{ mr: 2 }}>
                 Select ASIN:
               </Typography>
               <TabContext value={activeAsin}>
-                <CustomTabList
-                  onChange={(e, val) => setActiveAsin(val)}
-                  variant='scrollable'
-                  scrollButtons='auto'
-                  sx={{ mb: 0, borderBottom: 'none' }}
-                >
-                  <Tab label='B0CX23LKWM' value='asin1' />
-                  <Tab label='B0D9PRQ37Y' value='asin2' />
-                  <Tab label='B0BXMLKK3N' value='asin3' />
-                </CustomTabList>
+                {loading ? (
+                  <div className='flex items-center gap-2 px-4 h-12'>
+                    <CircularProgress size={20} />
+                    <Typography variant='body2'>Loading...</Typography>
+                  </div>
+                ) : (
+                  <CustomTabList
+                    onChange={(e, val) => setActiveAsin(val)}
+                    variant='scrollable'
+                    scrollButtons='auto'
+                    sx={{ mb: 0, borderBottom: 'none' }}
+                  >
+                    {asins.length > 0 ? (
+                      asins.map(item => <Tab key={item.asin} label={item.asin} value={item.asin} />)
+                    ) : (
+                      <Tab label='No Products' value='none' disabled />
+                    )}
+                  </CustomTabList>
+                )}
               </TabContext>
             </div>
             <GlobalTimeFilter

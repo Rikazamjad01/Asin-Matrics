@@ -1,3 +1,5 @@
+import { Suspense } from 'react'
+
 // MUI Imports
 import Button from '@mui/material/Button'
 
@@ -16,6 +18,7 @@ import HorizontalFooter from '@components/layout/horizontal/Footer'
 import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
 import AuthGuard from '@/hocs/AuthGuard'
+import AmazonConnectGate from '@/components/AmazonConnectGate'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -45,12 +48,16 @@ const Layout = async props => {
               navbar={<Navbar />}
               footer={<VerticalFooter />}
             >
-              {children}
+              <Suspense fallback={null}>
+                <AmazonConnectGate>{children}</AmazonConnectGate>
+              </Suspense>
             </VerticalLayout>
           }
           horizontalLayout={
             <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
-              {children}
+              <Suspense fallback={null}>
+                <AmazonConnectGate>{children}</AmazonConnectGate>
+              </Suspense>
             </HorizontalLayout>
           }
         />

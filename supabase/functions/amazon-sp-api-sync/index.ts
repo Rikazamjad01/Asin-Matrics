@@ -3,21 +3,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 // ─── Environment Variables ────────────────────────────────────────────────────
 const AMAZON_CLIENT_ID = Deno.env.get("AMAZON_CLIENT_ID")!
 const AMAZON_CLIENT_SECRET = Deno.env.get("AMAZON_CLIENT_SECRET")!
-const AMAZON_REFRESH_TOKEN = Deno.env.get("AMAZON_REFRESH_TOKEN")!
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!
 
 const SP_API_BASE = "https://sellingpartnerapi-na.amazon.com"
 const MARKETPLACE_US = "ATVPDKIKX0DER"
 
 // ─── Helper: Refresh Access Token ─────────────────────────────────────────────
-async function getAccessToken(): Promise<string> {
+async function getAccessToken(refreshToken: string): Promise<string> {
   const res = await fetch("https://api.amazon.com/auth/o2/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       grant_type: "refresh_token",
-      refresh_token: AMAZON_REFRESH_TOKEN,
+      refresh_token: refreshToken,
       client_id: AMAZON_CLIENT_ID,
       client_secret: AMAZON_CLIENT_SECRET,
     }),
@@ -146,8 +146,8 @@ function parseTSV(tsv: string): Record<string, string>[] {
 }
 
 // ─── Action: Sync FBA Inventory (Direct API) ─────────────────────────────────
-async function syncInventory(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function syncInventory(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   const url = new URL(`${SP_API_BASE}/fba/inventory/v1/summaries`)
 
@@ -196,8 +196,8 @@ async function syncInventory(supabase: ReturnType<typeof createClient>) {
 }
 
 // ─── Action: Sync Sales & Traffic Report ──────────────────────────────────────
-async function syncSalesTraffic(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function syncSalesTraffic(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   // Get last 30 days of data
   const endDate = new Date()
@@ -259,8 +259,8 @@ async function syncSalesTraffic(supabase: ReturnType<typeof createClient>) {
 }
 
 // ─── Action: Sync FBA Inventory Detail (Report) ──────────────────────────────
-async function syncInventoryDetail(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function syncInventoryDetail(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   const content = await requestAndDownloadReport(
     accessToken,
@@ -308,8 +308,8 @@ async function syncInventoryDetail(supabase: ReturnType<typeof createClient>) {
 }
 
 // ─── Action: Sync Inventory Planning (Report) ────────────────────────────────
-async function syncInventoryPlanning(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function syncInventoryPlanning(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   const content = await requestAndDownloadReport(
     accessToken,
@@ -362,8 +362,8 @@ async function syncInventoryPlanning(supabase: ReturnType<typeof createClient>) 
 }
 
 // ─── Action: Sync Brand Analytics Search Terms ────────────────────────────────
-async function syncSearchTerms(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function syncSearchTerms(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   const content = await requestAndDownloadReport(
     accessToken,
@@ -409,8 +409,8 @@ async function syncSearchTerms(supabase: ReturnType<typeof createClient>) {
 }
 
 // ─── Action: Sync Replenishment Metrics ───────────────────────────────────────
-async function syncReplenishmentMetrics(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function syncReplenishmentMetrics(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   // Use 2025-01-01 as start — Postman confirmed older dates return 403
   const body = {
@@ -492,8 +492,8 @@ async function syncReplenishmentMetrics(supabase: ReturnType<typeof createClient
 }
 
 // ─── Action: Send Solicitations ────────────────────────────────────────────────
-async function sendSolicitations(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function sendSolicitations(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   // 1. Fetch Orders from the last 30 days
   const url = new URL(`${SP_API_BASE}/orders/v0/orders`)
@@ -619,8 +619,8 @@ async function sendSolicitations(supabase: ReturnType<typeof createClient>) {
 }
 
 // ─── Sync Finances ────────────────────────────────────────────────────────────
-async function syncFinances(supabase: any) {
-  const accessToken = await getAccessToken()
+async function syncFinances(supabase: any, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   // 30 days ago
   const date = new Date()
@@ -733,8 +733,8 @@ async function syncFinances(supabase: any) {
 }
 
 // ─── Sync Subscribe and Save ──────────────────────────────────────────────────
-async function syncSns(supabase: ReturnType<typeof createClient>) {
-  const accessToken = await getAccessToken()
+async function syncSns(supabase: ReturnType<typeof createClient>, refreshToken: string) {
+  const accessToken = await getAccessToken(refreshToken)
 
   // 1. Fetch Performance Data
   const perfTs = await requestAndDownloadReport(
@@ -813,49 +813,84 @@ async function syncSns(supabase: ReturnType<typeof createClient>) {
 }
 
 // ─── Main Handler ─────────────────────────────────────────────────────────────
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   try {
     const { action } = await req.json()
 
+    // 1. Authenticate the User
+    const authHeader = req.headers.get("Authorization")
+
+    if (!authHeader) {
+      throw new Error("Missing Authorization header")
+    }
+
+    // Create client to get user context
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } }
+    })
+
+    const { data: { user }, error: authErr } = await userClient.auth.getUser()
+
+    if (authErr || !user) {
+      throw new Error(`Unauthorized (Invalid token)`)
+    }
+
+    // 2. Fetch User's Amazon Account and Refresh Token using Service Role
+    // (In a highly secure setup, this could be accessed directly by user auth if RLS allows selecting tokens directly,
+    // but edge function service role makes sure we can read the token)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // get user's amazon account first
+    const { data: accountTokens } = await supabase
+      .from("amazon_accounts")
+      .select("id, seller_id, amazon_tokens(refresh_token)")
+      .eq("user_id", user.id)
+      .limit(1)
+      .single()
+
+    if (!accountTokens || !accountTokens.amazon_tokens?.[0]?.refresh_token) {
+      throw new Error(`Amazon Account not linked. Please connect your Amazon Seller Account first.`)
+    }
+
+    const refreshToken = accountTokens.amazon_tokens[0].refresh_token
 
     let result
 
     switch (action) {
       case "inventory":
-        result = await syncInventory(supabase)
+        result = await syncInventory(supabase, refreshToken)
         break
 
       case "sales_traffic":
-        result = await syncSalesTraffic(supabase)
+        result = await syncSalesTraffic(supabase, refreshToken)
         break
 
       case "inventory_detail":
-        result = await syncInventoryDetail(supabase)
+        result = await syncInventoryDetail(supabase, refreshToken)
         break
 
       case "inventory_planning":
-        result = await syncInventoryPlanning(supabase)
+        result = await syncInventoryPlanning(supabase, refreshToken)
         break
 
       case "search_terms":
-        result = await syncSearchTerms(supabase)
+        result = await syncSearchTerms(supabase, refreshToken)
         break
 
       case "replenishment_metrics":
-        result = await syncReplenishmentMetrics(supabase)
+        result = await syncReplenishmentMetrics(supabase, refreshToken)
         break
 
       case "send_solicitations":
-        result = await sendSolicitations(supabase)
+        result = await sendSolicitations(supabase, refreshToken)
         break
 
       case "finances":
-        result = await syncFinances(supabase)
+        result = await syncFinances(supabase, refreshToken)
         break
 
       case "sns":
-        result = await syncSns(supabase)
+        result = await syncSns(supabase, refreshToken)
         break
 
       default:

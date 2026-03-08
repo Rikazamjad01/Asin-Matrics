@@ -21,7 +21,7 @@ const SnsKpiCards = ({ metricsData }) => {
       value: activeSubs.toLocaleString(),
       trend: '—',
       trendColor: 'text.secondary',
-      comparison: 'active subscriptions',
+      comparison: 'Active Subscriptions',
       icon: 'bx-group',
       color: 'primary'
     },
@@ -30,7 +30,7 @@ const SnsKpiCards = ({ metricsData }) => {
       value: `$${Number(monthlyRevenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       trend: '—',
       trendColor: 'text.secondary',
-      comparison: 'total subscriptions revenue',
+      comparison: 'Subscriptions Revenue',
       icon: 'bx-dollar-circle',
       color: 'success'
     },
@@ -51,7 +51,7 @@ const SnsKpiCards = ({ metricsData }) => {
           : '—',
       trend: '—',
       trendColor: 'text.secondary',
-      comparison: 'subscriber avg revenue',
+      comparison: 'Subscriber Avg Revenue',
       icon: 'bx-line-chart',
       color: 'info'
     },
@@ -60,7 +60,7 @@ const SnsKpiCards = ({ metricsData }) => {
       value: '—',
       trend: '—',
       trendColor: 'text.secondary',
-      comparison: 'not available from API',
+      comparison: 'Gowth Revenue',
       icon: 'bx-trending-up',
       color: 'secondary'
     }
