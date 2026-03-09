@@ -18,9 +18,6 @@ import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import MenuItem from '@mui/material/MenuItem'
 
-// Third-party Imports
-import { signOut, useSession } from 'next-auth/react'
-
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
@@ -29,6 +26,12 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+
+// Supabase Imports
+import { supabase } from '@/utils/supabase/client'
+
+// Context Imports
+import { useAmazonConnection } from '@/contexts/AmazonConnectionContext'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -49,9 +52,9 @@ const UserDropdown = () => {
 
   // Hooks
   const router = useRouter()
-  const { data: session } = useSession()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
+  const { user } = useAmazonConnection()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -71,13 +74,13 @@ const UserDropdown = () => {
 
   const handleUserLogout = async () => {
     try {
-      // Sign out from the app and redirect to login
-      await signOut({ callbackUrl: '/login' })
+      // Sign out from Supabase
+      await supabase.auth.signOut()
+
+      // Redirect to login
+      router.push(getLocalizedUrl('/login', locale))
     } catch (error) {
       console.error(error)
-
-      // Show above error in a toast like following
-      // toastService.error((err as Error).message)
     }
   }
 
@@ -92,8 +95,8 @@ const UserDropdown = () => {
       >
         <CustomAvatar
           ref={anchorRef}
-          alt={session?.user?.name || ''}
-          src={session?.user?.image || ''}
+          alt={user?.user_metadata?.first_name || user?.user_metadata?.full_name || 'User'}
+          src={user?.user_metadata?.avatar_url || ''}
           onClick={handleDropdownOpen}
           className='cursor-pointer'
         />
@@ -117,11 +120,19 @@ const UserDropdown = () => {
               <ClickAwayListener onClickAway={e => handleDropdownClose(e)}>
                 <MenuList>
                   <div className='flex items-center plb-2 pli-5 gap-2' tabIndex={-1}>
-                    <CustomAvatar size={40} alt={session?.user?.name || ''} src={session?.user?.image || ''} />
+                    <CustomAvatar
+                      size={40}
+                      alt={user?.user_metadata?.first_name || user?.user_metadata?.full_name || 'User'}
+                      src={user?.user_metadata?.avatar_url || ''}
+                    />
                     <div className='flex items-start flex-col'>
-                      <Typography variant='h6'>{session?.user?.name || ''}</Typography>
+                      <Typography variant='h6'>
+                        {user?.user_metadata?.first_name
+                          ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`
+                          : user?.user_metadata?.full_name || 'User'}
+                      </Typography>
                       <Typography variant='body2' color='text.disabled'>
-                        {session?.user?.email || ''}
+                        {user?.email || ''}
                       </Typography>
                     </div>
                   </div>
