@@ -18,7 +18,8 @@ import HorizontalFooter from '@components/layout/horizontal/Footer'
 import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
 import AuthGuard from '@/hocs/AuthGuard'
-import AmazonConnectGate from '@/components/AmazonConnectGate'
+import AmazonConnectionGuard from '@/components/AmazonConnectionGuard'
+import { AmazonConnectionProvider } from '@/contexts/AmazonConnectionContext'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -40,27 +41,27 @@ const Layout = async props => {
   return (
     <Providers direction={direction}>
       <AuthGuard locale={params.lang}>
-        <LayoutWrapper
-          systemMode={systemMode}
-          verticalLayout={
-            <VerticalLayout
-              navigation={<Navigation dictionary={dictionary} mode={mode} />}
-              navbar={<Navbar />}
-              footer={<VerticalFooter />}
-            >
-              <Suspense fallback={null}>
-                <AmazonConnectGate>{children}</AmazonConnectGate>
-              </Suspense>
-            </VerticalLayout>
-          }
-          horizontalLayout={
-            <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
-              <Suspense fallback={null}>
-                <AmazonConnectGate>{children}</AmazonConnectGate>
-              </Suspense>
-            </HorizontalLayout>
-          }
-        />
+        <AmazonConnectionProvider>
+          <AmazonConnectionGuard locale={params.lang}>
+            <LayoutWrapper
+              systemMode={systemMode}
+              verticalLayout={
+                <VerticalLayout
+                  navigation={<Navigation dictionary={dictionary} mode={mode} />}
+                  navbar={<Navbar />}
+                  footer={<VerticalFooter />}
+                >
+                  <Suspense fallback={null}>{children}</Suspense>
+                </VerticalLayout>
+              }
+              horizontalLayout={
+                <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
+                  <Suspense fallback={null}>{children}</Suspense>
+                </HorizontalLayout>
+              }
+            />
+          </AmazonConnectionGuard>
+        </AmazonConnectionProvider>
         <ScrollToTop className='mui-fixed'>
           <Button
             variant='contained'

@@ -22,6 +22,9 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 
+// Connection Context
+import { useAmazonConnection } from '@/contexts/AmazonConnectionContext'
+
 const RenderExpandIcon = ({ open, transitionDuration }) => (
   <StyledVerticalNavExpandIcon open={open} transitionDuration={transitionDuration}>
     <i className='bx-chevron-right' />
@@ -33,6 +36,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
   const theme = useTheme()
   const params = useParams()
   const verticalNavOptions = useVerticalNav()
+  const { isConnected } = useAmazonConnection()
 
   // Vars
   const { transitionDuration, isBreakpointReached } = verticalNavOptions
@@ -62,26 +66,42 @@ const VerticalMenu = ({ dictionary, scrollMenu }) => {
         renderExpandedMenuItemIcon={{ icon: <i className='bx-bxs-circle' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <MenuItem href={`/${locale}/dashboards/overview`} icon={<i className='bx-home' />}>
+        <MenuItem disabled={!isConnected} href={`/${locale}/dashboards/overview`} icon={<i className='bx-home' />}>
           {dictionary['navigation'].dashboard}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/advertising`} icon={<i className='bx-line-chart' />}>
+        <MenuItem
+          disabled={!isConnected}
+          href={`/${locale}/dashboards/advertising`}
+          icon={<i className='bx-line-chart' />}
+        >
           {dictionary['navigation'].advertising}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/sns-pro`} icon={<i className='bx-bar-chart' />}>
+        <MenuItem disabled={!isConnected} href={`/${locale}/dashboards/sns-pro`} icon={<i className='bx-bar-chart' />}>
           {dictionary['navigation']['sns-pro']}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/rank-pro`} icon={<i className='bx-trending-up' />}>
+        <MenuItem
+          disabled={!isConnected}
+          href={`/${locale}/dashboards/rank-pro`}
+          icon={<i className='bx-trending-up' />}
+        >
           {dictionary['navigation'].rankPro}
         </MenuItem>
-        <MenuItem href={`/${locale}/apps/ecommerce/products/list`} icon={<i className='bx-box' />}>
+        <MenuItem
+          disabled={!isConnected}
+          href={`/${locale}/apps/ecommerce/products/list`}
+          icon={<i className='bx-box' />}
+        >
           {dictionary['navigation'].products}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/rankings`} icon={<i className='bx-trophy' />}>
+        <MenuItem disabled={!isConnected} href={`/${locale}/dashboards/rankings`} icon={<i className='bx-trophy' />}>
           {dictionary['navigation'].rankings}
         </MenuItem>
-        <MenuItem href={`/${locale}/dashboards/reviews`} icon={<i className='bx-star' />}>
+        <MenuItem disabled={!isConnected} href={`/${locale}/dashboards/reviews`} icon={<i className='bx-star' />}>
           {dictionary['navigation'].reviews}
+        </MenuItem>
+
+        <MenuItem href={`/${locale}/apps/ecommerce/settings`} icon={<i className='bx-cog' />}>
+          {dictionary['navigation'].settings ?? 'Settings'}
         </MenuItem>
         {/* <MenuItem href={`/${locale}/dashboards/reports`} icon={<i className='bx-bar-chart' />}>
           {dictionary['navigation'].reports}

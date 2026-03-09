@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useState } from 'react'
+
 // Next Imports
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -7,10 +10,15 @@ import { useParams } from 'next/navigation'
 // MUI Imports
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
+import Alert from '@mui/material/Alert'
 import { styled, useTheme } from '@mui/material/styles'
 
 // Third-party Imports
 import classnames from 'classnames'
+import { Controller, useForm } from 'react-hook-form'
+import { valibotResolver } from '@hookform/resolvers/valibot'
+import { email, object, minLength, string, pipe } from 'valibot'
+import { toast } from 'react-toastify'
 
 // Component Imports
 import DirectionalIcon from '@components/DirectionalIcon'
@@ -19,6 +27,9 @@ import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+
+// Supabase Client
+import { supabase } from '@/utils/supabase/client'
 
 // Styled Custom Components
 const ForgotPasswordIllustration = styled('img')(({ theme }) => ({
@@ -35,10 +46,52 @@ const ForgotPasswordIllustration = styled('img')(({ theme }) => ({
   }
 }))
 
+const schema = object({
+  email: pipe(string(), minLength(1, 'This field is required'), email('Email is invalid'))
+})
+
 const ForgotPassword = () => {
+  // States
+  const [errorState, setErrorState] = useState(null)
+  const [successState, setSuccessState] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+
   // Hooks
   const { lang: locale } = useParams()
   const theme = useTheme()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    resolver: valibotResolver(schema),
+    defaultValues: {
+      email: ''
+    }
+  })
+
+  const onSubmit = async data => {
+    setIsLoading(true)
+    setErrorState(null)
+    setSuccessState(null)
+
+    // Send reset password email via Supabase
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      redirectTo: `${window.location.origin}/${locale}/reset-password`
+    })
+
+    if (error) {
+      toast.error(error.message)
+      setErrorState(error.message)
+      setIsLoading(false)
+
+      return
+    }
+    
+    toast.success('Reset link sent successfully!')
+    setIsLoading(false)
+  }
 
   return (
     <div className='flex bs-full justify-center'>
@@ -61,10 +114,43 @@ const ForgotPassword = () => {
             <Typography variant='h4'>Forgot Password 🔒</Typography>
             <Typography>Enter your email and we&#39;ll send you instructions to reset your password</Typography>
           </div>
-          <form noValidate autoComplete='off' onSubmit={e => e.preventDefault()} className='flex flex-col gap-6'>
-            <CustomTextField autoFocus fullWidth label='Email' placeholder='Enter your email' />
-            <Button fullWidth variant='contained' type='submit'>
-              Send reset link
+          {errorState && (
+            <Alert severity='error' className='mbe-2'>
+              {errorState}
+            </Alert>
+          )}
+          {successState && (
+            <Alert severity='success' className='mbe-2'>
+              {successState}
+            </Alert>
+          )}
+          <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6'>
+            <Controller
+              name='email'
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <CustomTextField
+                  {...field}
+                  autoFocus
+                  fullWidth
+                  type='email'
+                  label='Email'
+                  placeholder='Enter your email'
+                  onChange={e => {
+                    field.onChange(e.target.value)
+                    errorState !== null && setErrorState(null)
+                    successState !== null && setSuccessState(null)
+                  }}
+                  {...((errors.email || errorState !== null) && {
+                    error: true,
+                    helperText: errors?.email?.message || errorState
+                  })}
+                />
+              )}
+            />
+            <Button fullWidth variant='contained' type='submit' disabled={isLoading}>
+              {isLoading ? 'Sending...' : 'Send reset link'}
             </Button>
             <Typography className='flex justify-center items-center' color='primary.main'>
               <Link href={getLocalizedUrl('/login', locale)} className='flex items-center gap-1.5'>
