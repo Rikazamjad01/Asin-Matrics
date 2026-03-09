@@ -61,7 +61,8 @@ export default function AmazonConnectGate({ children }) {
     const handleConnect = () => {
       // The application ID is generated when you create an LWA app in Seller Central
       const appId = process.env.NEXT_PUBLIC_AMAZON_APP_ID || 'amzn1.sp.solution.xxxx'
-      const authUrl = `https://sellercentral.amazon.com/apps/authorize/consent?application_id=${appId}&state=${userId}&version=beta`
+      const redirectUri = process.env.NEXT_PUBLIC_AMAZON_REDIRECT_URI
+      const authUrl = `https://sellercentral.amazon.com/apps/authorize/consent?application_id=${appId}&state=${userId}&redirect_uri=${redirectUri}&version=beta`
 
       window.location.href = authUrl
     }

@@ -4,6 +4,7 @@ const AMAZON_CLIENT_ID = Deno.env.get("AMAZON_CLIENT_ID")!
 const AMAZON_CLIENT_SECRET = Deno.env.get("AMAZON_CLIENT_SECRET")!
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+const AMAZON_REDIRECT_URI = Deno.env.get("AMAZON_REDIRECT_URI")!
 const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "http://localhost:3000" // Fallback to localhost natively for dev
 
 Deno.serve(async (req: Request) => {
@@ -35,6 +36,7 @@ Deno.serve(async (req: Request) => {
         code: spapi_oauth_code,
         client_id: AMAZON_CLIENT_ID,
         client_secret: AMAZON_CLIENT_SECRET,
+        redirect_uri: AMAZON_REDIRECT_URI,
       }),
     })
 
@@ -42,6 +44,7 @@ Deno.serve(async (req: Request) => {
 
     if (!tokenData.refresh_token) {
       console.error("LWA Error:", tokenData)
+
       // Redirect to frontend with error
       return Response.redirect(`${dashboardUrl}?amazon_error=${encodeURIComponent(tokenData.error_description || 'Failed to get refresh token')}`, 302)
     }
@@ -78,6 +81,7 @@ Deno.serve(async (req: Request) => {
     // Attempt to select the account if upsert didn't return it (sometimes happens if no update occurred depending on RLS/schema config)
     // Actually we bypassed RLS via service role, but just in case:
     let accountId = accountData?.id
+
     if (!accountId) {
        const { data: existingAccount } = await supabase
         .from('amazon_accounts')
@@ -85,6 +89,7 @@ Deno.serve(async (req: Request) => {
         .eq('user_id', userId)
         .eq('seller_id', selling_partner_id)
         .single()
+
        accountId = existingAccount?.id
     }
 
@@ -110,6 +115,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (err) {
     console.error("Detailed Error in Amazon OAuth:", err)
-    return Response.redirect(`${dashboardUrl}?amazon_error=${encodeURIComponent((err as Error).message)}`, 302)
+
+return Response.redirect(`${dashboardUrl}?amazon_error=${encodeURIComponent((err as Error).message)}`, 302)
   }
 })
