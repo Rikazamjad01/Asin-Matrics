@@ -66,7 +66,7 @@ export default function AmazonConnectGate({ children }) {
         process.env.NEXT_PUBLIC_AMAZON_REDIRECT_URI ||
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/amazon-oauth-callback`
 
-      const authUrl = `https://sellercentral.amazon.com/apps/authorize/consent?application_id=${appId}&state=${userId}&redirect_uri=${encodeURIComponent(redirectUri)}&version=beta`
+      const authUrl = `https://sellercentral.amazon.com/apps/authorize/consent?application_id=${appId}&state=${userId}&version=beta`
 
       window.location.href = authUrl
     }
